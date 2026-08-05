@@ -97,6 +97,22 @@ export class AuthService {
     else this.toastService.success('Revisa tu correo', 'Te enviamos un enlace para restablecer tu contraseña.');
   }
 
+  public async inviteAdmin(email: string): Promise<boolean> {
+    if (!this.supabaseService.isReady || !email.trim()) {
+      this.toastService.error('No se pudo invitar', 'Indica un correo válido y configura Supabase.');
+      return false;
+    }
+    const { error } = await this.supabaseService.clientInstance!.functions.invoke('invite-admin', {
+      body: { email: email.trim(), redirectTo: window.location.origin },
+    });
+    if (error) {
+      this.toastService.error('No se pudo invitar', error.message);
+      return false;
+    }
+    this.toastService.success('Invitación enviada', `${email.trim()} podrá crear su contraseña y entrar como administrador.`);
+    return true;
+  }
+
   private async loadAdminSession(userId: string, email: string): Promise<boolean> {
     const client = this.supabaseService.clientInstance;
     if (!client) return false;

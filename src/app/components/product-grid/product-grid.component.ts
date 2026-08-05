@@ -5,6 +5,7 @@ import { ProductCardComponent } from '../product-card/product-card.component';
 import { ProductDetailModalComponent } from '../product-detail-modal/product-detail-modal.component';
 import { Product } from '../../models/product.model';
 import { CategoryService } from '../../services/category.service';
+import { StorefrontSettingsService } from '../../services/storefront-settings.service';
 
 @Component({
   selector: 'app-product-grid',
@@ -16,13 +17,13 @@ import { CategoryService } from '../../services/category.service';
       <!-- Hero Banner / Header -->
       <div class="mb-8 md:mb-12 text-center max-w-2xl mx-auto">
         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-stone-200/60 text-stone-700 mb-3 tracking-wide uppercase">
-          Diseño & Tecnología Premium
+          {{ storefrontSettings.settings().heroBadge }}
         </span>
         <h1 class="text-3xl sm:text-4xl md:text-5xl font-black text-stone-900 tracking-tight leading-tight">
-          Colección Exclusiva de Productos
+          {{ storefrontSettings.settings().heroTitle }}
         </h1>
         <p class="mt-3 text-sm sm:text-base text-stone-500 leading-relaxed">
-          Piezas seleccionadas con materiales sostenibles, acústica afinada y acabados minimalistas para elevar tu espacio de trabajo.
+          {{ storefrontSettings.settings().heroTagline }}
         </p>
       </div>
 
@@ -90,15 +91,15 @@ import { CategoryService } from '../../services/category.service';
               <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
           </div>
-          <h3 class="text-lg font-bold text-stone-900 mb-1">No encontramos productos</h3>
+          <h3 class="text-lg font-bold text-stone-900 mb-1">{{ storefrontSettings.settings().emptyTitle }}</h3>
           <p class="text-xs text-stone-500 max-w-sm mx-auto mb-6">
-            Intenta cambiar los términos de búsqueda o selecciona otra categoría.
+            {{ storefrontSettings.settings().emptyDescription }}
           </p>
           <button
             (click)="resetFilters()"
             class="px-5 py-2.5 rounded-2xl bg-stone-900 hover:bg-stone-800 text-white font-semibold text-xs shadow-md transition-all active:scale-95"
           >
-            Ver todos los productos
+            {{ storefrontSettings.settings().emptyAction }}
           </button>
         </div>
       } @else {
@@ -124,7 +125,12 @@ import { CategoryService } from '../../services/category.service';
 export class ProductGridComponent {
   public productService = inject(ProductService);
   public categoryService = inject(CategoryService);
+  public storefrontSettings = inject(StorefrontSettingsService);
   public selectedProductModal = signal<Product | null>(null);
+
+  constructor() {
+    void this.storefrontSettings.load();
+  }
 
   public categories = computed(() => {
     return ['Todos', ...this.categoryService.names()].sort((a, b) => {

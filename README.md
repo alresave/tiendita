@@ -30,6 +30,11 @@ La migración `20260805170000_secure_carts_and_atomic_checkout.sql` protege los
 carritos por sesión y añade el checkout atómico. Aplícala antes de desplegar la
 versión más reciente de la función `checkout`.
 
+La migración `20260805200000_admin_invites_and_storefront_content.sql` habilita
+el contenido editable de inicio. Después de aplicarla, despliega la función
+`invite-admin`; así los administradores pueden invitar a otros administradores
+desde el panel sin exponer la clave `service_role` en el navegador.
+
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.7.
 
 ## Development server

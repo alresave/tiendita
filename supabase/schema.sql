@@ -31,6 +31,21 @@ CREATE TABLE IF NOT EXISTS public.user_roles (
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS public.storefront_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+INSERT INTO public.storefront_settings (key, value) VALUES
+  ('heroBadge', 'Diseño & Tecnología Premium'),
+  ('heroTitle', 'Colección Exclusiva de Productos'),
+  ('heroTagline', 'Piezas seleccionadas con materiales sostenibles, acústica afinada y acabados minimalistas para elevar tu espacio de trabajo.'),
+  ('emptyTitle', 'No encontramos productos'),
+  ('emptyDescription', 'Intenta cambiar los términos de búsqueda o selecciona otra categoría.'),
+  ('emptyAction', 'Ver todos los productos')
+ON CONFLICT (key) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS public.categories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL UNIQUE CHECK (char_length(trim(name)) > 0),
@@ -107,6 +122,7 @@ ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.carts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cart_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.storefront_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
@@ -127,6 +143,16 @@ DROP POLICY IF EXISTS "Usuarios consultan su propio rol" ON public.user_roles;
 CREATE POLICY "Usuarios consultan su propio rol"
   ON public.user_roles FOR SELECT TO authenticated
   USING (user_id = auth.uid());
+
+DROP POLICY IF EXISTS "Administradores consultan roles" ON public.user_roles;
+CREATE POLICY "Administradores consultan roles" ON public.user_roles FOR SELECT TO authenticated
+  USING (public.is_admin());
+
+DROP POLICY IF EXISTS "Lectura pública de contenido de inicio" ON public.storefront_settings;
+CREATE POLICY "Lectura pública de contenido de inicio" ON public.storefront_settings FOR SELECT TO public USING (true);
+DROP POLICY IF EXISTS "Administradores gestionan contenido de inicio" ON public.storefront_settings;
+CREATE POLICY "Administradores gestionan contenido de inicio" ON public.storefront_settings FOR ALL TO authenticated
+  USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Lectura pública de categorías" ON public.categories;
 CREATE POLICY "Lectura pública de categorías" ON public.categories FOR SELECT TO public USING (true);

@@ -7,6 +7,8 @@ import { CategoryService } from '../../../services/category.service';
 import { OrderService } from '../../../services/order.service';
 import { Product } from '../../../models/product.model';
 import { ProductFormComponent } from '../product-form-modal/product-form-modal.component';
+import { StorefrontSettingsService } from '../../../services/storefront-settings.service';
+import { StorefrontSettings } from '../../../models/storefront-settings.model';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -57,6 +59,12 @@ import { ProductFormComponent } from '../product-form-modal/product-form-modal.c
                 </button>
                 <button (click)="toggleOrders()" class="px-4 py-2.5 rounded-2xl bg-stone-800 text-white font-bold text-xs hover:bg-stone-700 transition-all">
                   Pedidos
+                </button>
+                <button (click)="toggleContentManager()" class="px-4 py-2.5 rounded-2xl bg-stone-800 text-white font-bold text-xs hover:bg-stone-700 transition-all">
+                  Inicio
+                </button>
+                <button (click)="isAdminManagerOpen.update(value => !value)" class="px-4 py-2.5 rounded-2xl bg-stone-800 text-white font-bold text-xs hover:bg-stone-700 transition-all">
+                  Administradores
                 </button>
 
                 <button
@@ -145,6 +153,34 @@ import { ProductFormComponent } from '../product-form-modal/product-form-modal.c
                     }
                   </div>
                 }
+              </section>
+            }
+
+            @if (isContentManagerOpen()) {
+              <section class="p-6 border-b border-stone-100 bg-stone-50">
+                <div class="flex items-center justify-between gap-3 mb-4">
+                  <div><h3 class="font-bold text-stone-900">Contenido de inicio</h3><p class="text-xs text-stone-500 mt-1">Edita los mensajes visibles en la página principal.</p></div>
+                  <button (click)="saveStorefrontContent()" class="px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold">Guardar cambios</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <label class="text-xs font-semibold text-stone-600">Distintivo<input [(ngModel)]="storefrontDraft.heroBadge" class="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 font-normal" /></label>
+                  <label class="text-xs font-semibold text-stone-600">Título<input [(ngModel)]="storefrontDraft.heroTitle" class="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 font-normal" /></label>
+                  <label class="text-xs font-semibold text-stone-600 md:col-span-2">Tagline / descripción<textarea [(ngModel)]="storefrontDraft.heroTagline" rows="2" class="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 font-normal"></textarea></label>
+                  <label class="text-xs font-semibold text-stone-600">Título sin resultados<input [(ngModel)]="storefrontDraft.emptyTitle" class="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 font-normal" /></label>
+                  <label class="text-xs font-semibold text-stone-600">Botón sin resultados<input [(ngModel)]="storefrontDraft.emptyAction" class="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 font-normal" /></label>
+                  <label class="text-xs font-semibold text-stone-600 md:col-span-2">Mensaje sin resultados<textarea [(ngModel)]="storefrontDraft.emptyDescription" rows="2" class="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 font-normal"></textarea></label>
+                </div>
+              </section>
+            }
+
+            @if (isAdminManagerOpen()) {
+              <section class="p-6 border-b border-stone-100 bg-stone-50">
+                <h3 class="font-bold text-stone-900">Agregar administrador</h3>
+                <p class="text-xs text-stone-500 mt-1 mb-3">Enviaremos una invitación para que esta persona cree su contraseña y acceda al panel.</p>
+                <div class="flex flex-col sm:flex-row gap-2 max-w-xl">
+                  <input [(ngModel)]="newAdminEmail" type="email" placeholder="admin@tu-dominio.com" class="flex-1 rounded-xl border border-stone-200 px-3 py-2 text-sm" />
+                  <button (click)="inviteAdmin()" [disabled]="isInvitingAdmin()" class="px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold disabled:opacity-50">{{ isInvitingAdmin() ? 'Enviando…' : 'Enviar invitación' }}</button>
+                </div>
               </section>
             }
 
@@ -285,13 +321,35 @@ export class AdminDashboardComponent {
   public authService = inject(AuthService);
   public categoryService = inject(CategoryService);
   public orderService = inject(OrderService);
+  public storefrontSettingsService = inject(StorefrontSettingsService);
 
   public adminSearch = '';
   public isFormModalOpen = signal<boolean>(false);
   public selectedProductForEdit = signal<Product | null>(null);
   public isCategoryManagerOpen = signal<boolean>(false);
   public isOrdersOpen = signal<boolean>(false);
+  public isContentManagerOpen = signal<boolean>(false);
+  public isAdminManagerOpen = signal<boolean>(false);
+  public isInvitingAdmin = signal<boolean>(false);
   public newCategoryName = '';
+  public newAdminEmail = '';
+  public storefrontDraft: StorefrontSettings = { ...this.storefrontSettingsService.settings() };
+
+  public async saveStorefrontContent(): Promise<void> {
+    await this.storefrontSettingsService.save(this.storefrontDraft);
+  }
+
+  public toggleContentManager(): void {
+    this.isContentManagerOpen.update(value => !value);
+    if (this.isContentManagerOpen()) this.storefrontDraft = { ...this.storefrontSettingsService.settings() };
+  }
+
+  public async inviteAdmin(): Promise<void> {
+    this.isInvitingAdmin.set(true);
+    const invited = await this.authService.inviteAdmin(this.newAdminEmail);
+    this.isInvitingAdmin.set(false);
+    if (invited) this.newAdminEmail = '';
+  }
 
   public async createCategory(): Promise<void> {
     if (await this.categoryService.ensure(this.newCategoryName)) this.newCategoryName = '';
