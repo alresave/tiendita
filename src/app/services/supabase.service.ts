@@ -31,13 +31,20 @@ export class SupabaseService {
       }
     } else {
       console.info(
-        'Supabase no está configurado aún en environment.ts. Se usarán datos locales de respaldo para la demo.'
+        'Supabase no está configurado aún en environment.ts. El catálogo usa datos de muestra y el panel de administración permanece bloqueado.'
       );
     }
   }
 
   public get clientInstance(): SupabaseClient | null {
     return this.client;
+  }
+
+  public createSessionClient(sessionId: string): SupabaseClient | null {
+    if (!this.isReady) return null;
+    return createClient(environment.supabaseUrl, environment.supabaseKey, {
+      global: { headers: { 'x-session-id': sessionId } },
+    });
   }
 
   public get isReady(): boolean {

@@ -4,6 +4,7 @@ import { ProductService } from '../../services/product.service';
 import { ProductCardComponent } from '../product-card/product-card.component';
 import { ProductDetailModalComponent } from '../product-detail-modal/product-detail-modal.component';
 import { Product } from '../../models/product.model';
+import { CategoryService } from '../../services/category.service';
 
 @Component({
   selector: 'app-product-grid',
@@ -122,15 +123,16 @@ import { Product } from '../../models/product.model';
 })
 export class ProductGridComponent {
   public productService = inject(ProductService);
+  public categoryService = inject(CategoryService);
   public selectedProductModal = signal<Product | null>(null);
 
-  public categories = signal<string[]>([
-    'Todos',
-    'Audio',
-    'Periféricos',
-    'Iluminación',
-    'Monitores'
-  ]);
+  public categories = computed(() => {
+    return ['Todos', ...this.categoryService.names()].sort((a, b) => {
+      if (a === 'Todos') return -1;
+      if (b === 'Todos') return 1;
+      return a.localeCompare(b);
+    });
+  });
 
   // Computed filtering for performance
   public filteredProducts = computed(() => {

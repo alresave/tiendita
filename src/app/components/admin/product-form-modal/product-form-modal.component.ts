@@ -1,8 +1,10 @@
-import { Component, Input, Output, EventEmitter, inject, OnInit } from '@angular/core';
+import { Component, Input, Output, EventEmitter, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Product, ProductSpecs } from '../../../models/product.model';
 import { ProductService } from '../../../services/product.service';
+import { CategoryService } from '../../../services/category.service';
+import { SupabaseService } from '../../../services/supabase.service';
 
 interface SpecRow {
   key: string;
@@ -74,18 +76,21 @@ interface SpecRow {
 
                 <div>
                   <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">Categoría *</label>
-                  <select
+                  <input
+                    type="text"
                     [(ngModel)]="formData.category"
                     name="category"
                     required
+                    list="product-categories"
+                    placeholder="Escribe o elige una categoría"
                     class="w-full px-3.5 py-2.5 text-sm bg-stone-50 rounded-xl border border-stone-200 focus:bg-white focus:ring-2 focus:ring-stone-900 focus:outline-none"
-                  >
-                    <option value="Audio">Audio</option>
-                    <option value="Periféricos">Periféricos</option>
-                    <option value="Iluminación">Iluminación</option>
-                    <option value="Monitores">Monitores</option>
-                    <option value="Accesorios">Accesorios</option>
-                  </select>
+                  />
+                  <datalist id="product-categories">
+                    @for (category of availableCategories(); track category) {
+                      <option [value]="category"></option>
+                    }
+                  </datalist>
+                  <p class="mt-1 text-[10px] text-stone-400">Puedes escribir una categoría nueva.</p>
                 </div>
               </div>
 
@@ -149,13 +154,13 @@ interface SpecRow {
               <div>
                 <div class="flex items-center justify-between mb-1.5">
                   <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider">URL de Imágenes *</label>
-                  <button
-                    type="button"
-                    (click)="addImageUrl()"
-                    class="text-xs text-indigo-600 font-semibold hover:text-indigo-800"
-                  >
-                    + Agregar otra URL
-                  </button>
+                  <div class="flex gap-3">
+                    <label class="text-xs text-indigo-600 font-semibold hover:text-indigo-800 cursor-pointer">
+                      {{ isUploadingImage ? 'Subiendo…' : 'Subir imagen' }}
+                      <input type="file" accept="image/*" class="hidden" [disabled]="isUploadingImage" (change)="uploadImage($event)" />
+                    </label>
+                    <button type="button" (click)="addImageUrl()" class="text-xs text-indigo-600 font-semibold hover:text-indigo-800">+ Agregar URL</button>
+                  </div>
                 </div>
 
                 <div class="space-y-2">
@@ -267,9 +272,15 @@ export class ProductFormComponent implements OnInit {
   @Output() close = new EventEmitter<void>();
 
   private productService = inject(ProductService);
+  private categoryService = inject(CategoryService);
+  private supabaseService = inject(SupabaseService);
 
   public isEditing = false;
   public isSubmitting = false;
+  public isUploadingImage = false;
+  public availableCategories = computed(() => {
+    return this.categoryService.names();
+  });
 
   public formData: Partial<Product> = {
     sku: '',
@@ -308,6 +319,27 @@ export class ProductFormComponent implements OnInit {
     this.imageUrls.splice(index, 1);
   }
 
+  public async uploadImage(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    input.value = '';
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      return;
+    }
+
+    this.isUploadingImage = true;
+    const fileName = `${crypto.randomUUID()}-${file.name.replace(/[^a-zA-Z0-9._-]/g, '-')}`;
+    const client = this.supabaseService.clientInstance;
+    if (!client) { this.isUploadingImage = false; return; }
+    const { error } = await client.storage.from('product-images').upload(fileName, file, { upsert: false });
+    if (!error) {
+      const { data } = client.storage.from('product-images').getPublicUrl(fileName);
+      this.imageUrls = [...this.imageUrls.filter((url) => url.trim()), data.publicUrl];
+    }
+    this.isUploadingImage = false;
+  }
+
   public addSpecRow(): void {
     this.specRows.push({ key: '', value: '' });
   }
@@ -334,7 +366,7 @@ export class ProductFormComponent implements OnInit {
     const payload = {
       sku: this.formData.sku.trim(),
       name: this.formData.name.trim(),
-      category: this.formData.category || 'General',
+      category: this.formData.category?.trim() || 'General',
       description: this.formData.description.trim(),
       price: Number(this.formData.price),
       stock: Number(this.formData.stock),
@@ -343,6 +375,11 @@ export class ProductFormComponent implements OnInit {
     };
 
     let success = false;
+
+    if (!await this.categoryService.ensure(payload.category)) {
+      this.isSubmitting = false;
+      return;
+    }
 
     if (this.isEditing && this.productToEdit) {
       success = await this.productService.updateProduct(this.productToEdit.id, payload);

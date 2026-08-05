@@ -182,13 +182,6 @@ export class ProductService {
    * Crear un nuevo producto en Supabase o en estado reactivo local
    */
   public async createProduct(productData: Omit<Product, 'id' | 'created_at'>): Promise<boolean> {
-    const newId = 'prod-' + Math.random().toString(36).substring(2, 9);
-    const newProduct: Product = {
-      ...productData,
-      id: newId,
-      created_at: new Date().toISOString(),
-    };
-
     if (this.supabaseService.isReady) {
       const client = this.supabaseService.clientInstance!;
       const { data, error } = await client
@@ -199,6 +192,7 @@ export class ProductService {
           description: productData.description,
           price: productData.price,
           stock: productData.stock,
+          category: productData.category,
           specs: productData.specs,
           images: productData.images,
         })
@@ -215,10 +209,8 @@ export class ProductService {
       }
     }
 
-    // Fallback local
-    this.products.update((current) => [newProduct, ...current]);
-    this.toastService.success('¡Producto Creado!', `${newProduct.name} añadido correctamente.`);
-    return true;
+    this.toastService.error('Administración no disponible', 'Configura Supabase para gestionar el catálogo.');
+    return false;
   }
 
   /**
@@ -238,9 +230,12 @@ export class ProductService {
       }
     }
 
-    this.products.update((current) =>
-      current.map((p) => (p.id === id ? { ...p, ...updates } : p))
-    );
+    if (!this.supabaseService.isReady) {
+      this.toastService.error('Administración no disponible', 'Configura Supabase para gestionar el catálogo.');
+      return false;
+    }
+
+    this.products.update((current) => current.map((p) => (p.id === id ? { ...p, ...updates } : p)));
     this.toastService.success('Producto Actualizado', 'Los cambios han sido guardados.');
     return true;
   }
@@ -259,6 +254,11 @@ export class ProductService {
         this.toastService.error('Error al eliminar', error.message);
         return false;
       }
+    }
+
+    if (!this.supabaseService.isReady) {
+      this.toastService.error('Administración no disponible', 'Configura Supabase para gestionar el catálogo.');
+      return false;
     }
 
     this.products.update((current) => current.filter((p) => p.id !== id));

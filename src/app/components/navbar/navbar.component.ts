@@ -20,7 +20,7 @@ import { AuthService } from '../../services/auth.service';
             <span class="w-8 h-8 rounded-xl bg-gradient-to-tr from-stone-900 to-stone-700 text-white flex items-center justify-center font-black text-lg shadow-sm group-hover:scale-105 transition-transform duration-300">
               A
             </span>
-            <span class="font-bold tracking-wider">AURA</span>
+            <span class="font-bold tracking-wider">Aidé storefront</span>
             <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
           </a>
 

@@ -16,6 +16,7 @@ export class CartService implements OnDestroy {
   public readonly sessionId: string = this.getOrCreateSessionId();
   private dbCartId: string | null = null;
   private realtimeChannel: RealtimeChannel | null = null;
+  private sessionClient: ReturnType<SupabaseService['createSessionClient']> = null;
 
   // 2. Estado reactivo principal con Signals
   public cart = signal<CartItem[]>(this.loadCartFromStorage());
@@ -68,7 +69,9 @@ export class CartService implements OnDestroy {
   private async initCartInSupabase(): Promise<void> {
     if (!this.supabaseService.isReady) return;
 
-    const client = this.supabaseService.clientInstance!;
+    const client = this.supabaseService.createSessionClient(this.sessionId);
+    if (!client) return;
+    this.sessionClient = client;
 
     try {
       // Obtener o crear carrito en la tabla `carts`
@@ -129,7 +132,8 @@ export class CartService implements OnDestroy {
   private async syncFromSupabase(): Promise<void> {
     if (!this.dbCartId || !this.supabaseService.isReady) return;
 
-    const client = this.supabaseService.clientInstance!;
+    const client = this.sessionClient;
+    if (!client) return;
 
     const { data: items, error } = await client
       .from('cart_items')
@@ -222,7 +226,8 @@ export class CartService implements OnDestroy {
       );
 
       if (this.dbCartId && this.supabaseService.isReady) {
-        const client = this.supabaseService.clientInstance!;
+        const client = this.sessionClient;
+        if (!client) return;
         await client
           .from('cart_items')
           .delete()
@@ -256,7 +261,8 @@ export class CartService implements OnDestroy {
     this.saveCartToStorage();
 
     if (this.dbCartId && this.supabaseService.isReady) {
-      const client = this.supabaseService.clientInstance!;
+      const client = this.sessionClient;
+      if (!client) return;
       await client.from('cart_items').delete().eq('cart_id', this.dbCartId);
     }
 
@@ -279,14 +285,16 @@ export class CartService implements OnDestroy {
     };
 
     if (this.supabaseService.isReady) {
-      const client = this.supabaseService.clientInstance!;
+      const client = this.sessionClient;
+      if (!client) return false;
       try {
         const { data, error } = await client.functions.invoke('checkout', {
           body: payload,
         });
 
         if (error) {
-          console.warn('Fallback local en checkout:', error.message);
+          this.toastService.error('No se pudo procesar el pedido', error.message);
+          return false;
         } else if (data?.success) {
           this.toastService.success(
             '¡Orden Confirmada!',
@@ -296,17 +304,13 @@ export class CartService implements OnDestroy {
           return true;
         }
       } catch (e) {
-        console.warn('Edge Function no desplegada en ambiente local demo, simulando cierre exitoso.');
+        this.toastService.error('No se pudo procesar el pedido', 'No fue posible conectar con el checkout.');
+        return false;
       }
     }
 
-    // Fallback simulado
-    this.toastService.success(
-      '¡Orden Simulada Exitosamente!',
-      'Checkout procesado correctamente en el cliente.'
-    );
-    await this.clearCart();
-    return true;
+    this.toastService.error('Checkout no disponible', 'La tienda requiere conexión con Supabase para confirmar pedidos.');
+    return false;
   }
 
   public toggleDrawer(): void {
@@ -324,7 +328,8 @@ export class CartService implements OnDestroy {
   private async persistItemToSupabase(productId: string): Promise<void> {
     if (!this.dbCartId || !this.supabaseService.isReady) return;
 
-    const client = this.supabaseService.clientInstance!;
+    const client = this.sessionClient;
+    if (!client) return;
     const item = this.cart().find((i) => i.product.id === productId);
 
     if (item) {

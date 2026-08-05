@@ -1,4 +1,34 @@
-# Tiendita
+# Aidé storefront
+
+## Administración
+
+El área administrativa usa Supabase Auth y solo permite gestionar productos a
+usuarios con el rol `admin`. Configura `supabaseUrl` y `supabaseKey` en
+`src/environments/environment.ts`, ejecuta `supabase/schema.sql` en el SQL
+Editor de Supabase y crea el usuario administrador en **Authentication > Users**.
+
+Después, asígnale el rol desde el SQL Editor:
+
+```sql
+insert into public.user_roles (user_id, role)
+values ('UUID_DEL_USUARIO', 'admin')
+on conflict (user_id) do update set role = excluded.role;
+```
+
+No hay acceso de demostración: los cambios de productos solo se realizan si la
+sesión autenticada tiene ese rol y las políticas RLS de Supabase lo confirman.
+
+Para producción, completa `src/environments/environment.prod.ts` con la Project
+URL y la Publishable/anon key. La `service_role` no debe incluirse en Angular.
+
+Para una base ya creada, aplica primero
+`supabase/migrations/20260805160000_store_management.sql` en el SQL Editor.
+Después despliega de nuevo `supabase/functions/checkout`, ya que ahora registra
+el pedido y sus productos además de descontar el inventario.
+
+La migración `20260805170000_secure_carts_and_atomic_checkout.sql` protege los
+carritos por sesión y añade el checkout atómico. Aplícala antes de desplegar la
+versión más reciente de la función `checkout`.
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.0.7.
 

@@ -16,7 +16,7 @@ export class AuthService {
   private toastService = inject(ToastService);
 
   // Signals de estado de usuario
-  public currentUser = signal<UserSession | null>(this.loadUserFromStorage());
+  public currentUser = signal<UserSession | null>(null);
   public isAuthModalOpen = signal<boolean>(false);
   public isLoading = signal<boolean>(false);
 
@@ -33,18 +33,11 @@ export class AuthService {
     const client = this.supabaseService.clientInstance!;
 
     // Escuchar eventos de autenticación de Supabase Auth
-    client.auth.onAuthStateChange((event, session) => {
+    client.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
-        const user: UserSession = {
-          id: session.user.id,
-          email: session.user.email || 'admin@aura.com',
-          role: session.user.role || 'admin',
-        };
-        this.currentUser.set(user);
-        this.saveUserToStorage(user);
+        await this.loadAdminSession(session.user.id, session.user.email || '');
       } else if (event === 'SIGNED_OUT') {
         this.currentUser.set(null);
-        this.clearUserStorage();
       }
     });
   }
@@ -66,40 +59,20 @@ export class AuthService {
         return false;
       }
 
-      if (data.user) {
-        const userSession: UserSession = {
-          id: data.user.id,
-          email: data.user.email || email,
-          role: 'admin',
-        };
-        this.currentUser.set(userSession);
-        this.saveUserToStorage(userSession);
+      if (data.user && await this.loadAdminSession(data.user.id, data.user.email || email)) {
         this.isAuthModalOpen.set(false);
-        this.toastService.success('¡Bienvenido Administrador!', `Sesión iniciada como ${userSession.email}`);
+        this.toastService.success('Bienvenido al panel', `Sesión iniciada como ${data.user.email || email}`);
         return true;
       }
+
+      await client.auth.signOut();
+      this.toastService.error('Acceso denegado', 'Esta cuenta no tiene permisos de administración.');
+      return false;
     }
 
-    // Fallback para modo demo local
     this.isLoading.set(false);
-    return this.demoLogin(email);
-  }
-
-  public demoLogin(emailInput?: string): boolean {
-    const demoUser: UserSession = {
-      id: 'usr-admin-demo-99',
-      email: emailInput && emailInput.includes('@') ? emailInput : 'admin@aura.com',
-      role: 'admin',
-    };
-
-    this.currentUser.set(demoUser);
-    this.saveUserToStorage(demoUser);
-    this.isAuthModalOpen.set(false);
-    this.toastService.success(
-      'Sesión Admin Activa (Modo Demo)',
-      `Has ingresado como ${demoUser.email}`
-    );
-    return true;
+    this.toastService.error('Administración no configurada', 'Configura Supabase para iniciar sesión en el panel.');
+    return false;
   }
 
   public async logout(): Promise<void> {
@@ -109,28 +82,37 @@ export class AuthService {
     }
 
     this.currentUser.set(null);
-    this.clearUserStorage();
     this.toastService.info('Sesión Cerrada', 'Has salido del panel de administración.');
   }
 
-  private saveUserToStorage(user: UserSession): void {
-    try {
-      localStorage.setItem('aura_user', JSON.stringify(user));
-    } catch (e) {}
-  }
-
-  private loadUserFromStorage(): UserSession | null {
-    try {
-      const data = localStorage.getItem('aura_user');
-      return data ? JSON.parse(data) : null;
-    } catch (e) {
-      return null;
+  public async requestPasswordReset(email: string): Promise<void> {
+    if (!this.supabaseService.isReady || !email.trim()) {
+      this.toastService.error('No se pudo enviar el correo', 'Indica un correo y configura Supabase.');
+      return;
     }
+    const { error } = await this.supabaseService.clientInstance!.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: window.location.origin,
+    });
+    if (error) this.toastService.error('No se pudo enviar el correo', error.message);
+    else this.toastService.success('Revisa tu correo', 'Te enviamos un enlace para restablecer tu contraseña.');
   }
 
-  private clearUserStorage(): void {
-    try {
-      localStorage.removeItem('aura_user');
-    } catch (e) {}
+  private async loadAdminSession(userId: string, email: string): Promise<boolean> {
+    const client = this.supabaseService.clientInstance;
+    if (!client) return false;
+
+    const { data, error } = await client
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    if (error || data?.role !== 'admin') {
+      this.currentUser.set(null);
+      return false;
+    }
+
+    this.currentUser.set({ id: userId, email, role: 'admin' });
+    return true;
   }
 }

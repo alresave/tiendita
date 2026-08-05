@@ -57,7 +57,7 @@ import { ProductService } from '../../services/product.service';
                   [(ngModel)]="email"
                   name="email"
                   required
-                  placeholder="admin@aura.com"
+                  placeholder="admin@tu-dominio.com"
                   class="w-full px-4 py-3 text-sm bg-stone-50 rounded-2xl border border-stone-200 focus:bg-white focus:ring-2 focus:ring-stone-900 focus:outline-none transition-all"
                 />
               </div>
@@ -110,25 +110,10 @@ import { ProductService } from '../../services/product.service';
               </button>
             </form>
 
-            <div class="relative my-6">
-              <div class="absolute inset-0 flex items-center">
-                <div class="w-full border-t border-stone-200"></div>
-              </div>
-              <div class="relative flex justify-center text-xs uppercase">
-                <span class="bg-white px-3 text-stone-400 font-bold">O acceso rápido</span>
-              </div>
-            </div>
-
-            <!-- Demo Access Button -->
-            <button
-              (click)="onDemoLogin()"
-              class="w-full py-3 px-4 rounded-2xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200/80 font-bold text-xs transition-all active:scale-95 flex items-center justify-center gap-2"
-            >
-              <svg class="w-4 h-4 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-              </svg>
-              <span>Entrar como Admin Demo (Sin clave)</span>
+            <button type="button" (click)="onPasswordReset()" class="w-full mt-4 text-xs font-semibold text-stone-500 hover:text-stone-900">
+              ¿Olvidaste tu contraseña?
             </button>
+
           </div>
         </div>
       </div>
@@ -139,7 +124,7 @@ export class AuthModalComponent {
   public authService = inject(AuthService);
   private productService = inject(ProductService);
 
-  public email = 'admin@aura.com';
+  public email = '';
   public password = '';
   public showPassword = signal<boolean>(false);
 
@@ -152,10 +137,7 @@ export class AuthModalComponent {
     }
   }
 
-  public onDemoLogin(): void {
-    const success = this.authService.demoLogin(this.email);
-    if (success) {
-      this.productService.isAdminOpen.set(true);
-    }
+  public async onPasswordReset(): Promise<void> {
+    await this.authService.requestPasswordReset(this.email);
   }
 }

@@ -3,6 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../services/product.service';
 import { AuthService } from '../../../services/auth.service';
+import { CategoryService } from '../../../services/category.service';
+import { OrderService } from '../../../services/order.service';
 import { Product } from '../../../models/product.model';
 import { ProductFormComponent } from '../product-form-modal/product-form-modal.component';
 
@@ -50,6 +52,13 @@ import { ProductFormComponent } from '../product-form-modal/product-form-modal.c
                   <span>Nuevo Producto</span>
                 </button>
 
+                <button (click)="isCategoryManagerOpen.update(value => !value)" class="px-4 py-2.5 rounded-2xl bg-stone-800 text-white font-bold text-xs hover:bg-stone-700 transition-all">
+                  Categorías
+                </button>
+                <button (click)="toggleOrders()" class="px-4 py-2.5 rounded-2xl bg-stone-800 text-white font-bold text-xs hover:bg-stone-700 transition-all">
+                  Pedidos
+                </button>
+
                 <button
                   (click)="onLogout()"
                   class="px-3 py-2 rounded-xl bg-stone-800 text-stone-300 hover:text-rose-400 hover:bg-stone-700 font-semibold text-xs transition-colors"
@@ -93,6 +102,52 @@ import { ProductFormComponent } from '../product-form-modal/product-form-modal.c
             </div>
 
             <!-- Filter & Search Subheader -->
+            @if (isCategoryManagerOpen()) {
+              <section class="p-6 border-b border-stone-100 bg-stone-50">
+                <div class="flex flex-col sm:flex-row gap-3 sm:items-end sm:justify-between">
+                  <div class="flex-1">
+                    <label class="block text-xs font-bold text-stone-600 uppercase tracking-wider mb-1.5">Nueva categoría</label>
+                    <div class="flex gap-2">
+                      <input [(ngModel)]="newCategoryName" placeholder="Ej. Hogar" class="flex-1 px-3 py-2 text-sm rounded-xl border border-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-900" />
+                      <button (click)="createCategory()" class="px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold">Agregar</button>
+                    </div>
+                  </div>
+                  <span class="text-xs text-stone-400">Las categorías sin productos pueden eliminarse.</span>
+                </div>
+                <div class="flex flex-wrap gap-2 mt-4">
+                  @for (category of categoryService.categories(); track category.id) {
+                    <div class="inline-flex items-center gap-1.5 bg-white border border-stone-200 rounded-xl px-3 py-2 text-xs font-semibold text-stone-700">
+                      {{ category.name }}
+                      <button (click)="renameCategory(category)" class="text-stone-400 hover:text-stone-900" title="Renombrar">✎</button>
+                      <button (click)="deleteCategory(category)" class="text-stone-400 hover:text-rose-600" title="Eliminar">×</button>
+                    </div>
+                  }
+                </div>
+              </section>
+            }
+
+            @if (isOrdersOpen()) {
+              <section class="p-6 border-b border-stone-100 bg-stone-50">
+                <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-stone-900">Pedidos recientes</h3><button (click)="orderService.load()" class="text-xs font-semibold text-stone-600">Actualizar</button></div>
+                @if (orderService.orders().length === 0) {
+                  <p class="text-xs text-stone-500">Aún no hay pedidos.</p>
+                } @else {
+                  <div class="space-y-2">
+                    @for (order of orderService.orders(); track order.id) {
+                      <div class="bg-white border border-stone-200 rounded-xl p-3 flex flex-wrap items-center gap-3 text-xs">
+                        <span class="font-mono font-bold text-stone-900">{{ order.order_number }}</span>
+                        <span class="text-stone-500">{{ order.created_at | date:'short' }}</span>
+                        <span class="font-bold ml-auto">\${{ order.total | number:'1.2-2' }}</span>
+                        <select [ngModel]="order.status" (ngModelChange)="orderService.setStatus(order, $event)" class="rounded-lg border border-stone-200 px-2 py-1 text-xs">
+                          <option value="pending">Pendiente</option><option value="paid">Pagado</option><option value="shipped">Enviado</option><option value="cancelled">Cancelado</option>
+                        </select>
+                      </div>
+                    }
+                  </div>
+                }
+              </section>
+            }
+
             <div class="px-6 py-3 border-b border-stone-100 flex items-center justify-between gap-4 bg-white">
               <div class="relative flex-1 max-w-sm">
                 <input
@@ -228,10 +283,35 @@ import { ProductFormComponent } from '../product-form-modal/product-form-modal.c
 export class AdminDashboardComponent {
   public productService = inject(ProductService);
   public authService = inject(AuthService);
+  public categoryService = inject(CategoryService);
+  public orderService = inject(OrderService);
 
   public adminSearch = '';
   public isFormModalOpen = signal<boolean>(false);
   public selectedProductForEdit = signal<Product | null>(null);
+  public isCategoryManagerOpen = signal<boolean>(false);
+  public isOrdersOpen = signal<boolean>(false);
+  public newCategoryName = '';
+
+  public async createCategory(): Promise<void> {
+    if (await this.categoryService.ensure(this.newCategoryName)) this.newCategoryName = '';
+  }
+
+  public async renameCategory(category: any): Promise<void> {
+    const name = prompt('Nuevo nombre de categoría', category.name);
+    if (name) await this.categoryService.rename(category, name);
+  }
+
+  public async deleteCategory(category: any): Promise<void> {
+    const inUse = this.productService.products().some(product => product.category === category.name);
+    if (inUse) return;
+    if (confirm(`¿Eliminar la categoría "${category.name}"?`)) await this.categoryService.remove(category);
+  }
+
+  public async toggleOrders(): Promise<void> {
+    this.isOrdersOpen.update(value => !value);
+    if (this.isOrdersOpen()) await this.orderService.load();
+  }
 
   public filteredAdminProducts = computed(() => {
     const all = this.productService.products();

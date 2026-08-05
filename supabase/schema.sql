@@ -14,10 +14,45 @@ CREATE TABLE IF NOT EXISTS public.products (
   description TEXT NOT NULL,
   price NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
   stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
+  category TEXT NOT NULL DEFAULT 'General',
   specs JSONB DEFAULT '{}'::jsonb,
   images TEXT[] DEFAULT ARRAY[]::TEXT[],
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
 );
+
+-- Compatible con instalaciones creadas antes de que se añadiera la categoría.
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'General';
+
+-- Roles de aplicación. Solo se asignan desde el Dashboard de Supabase o con la
+-- service_role; el cliente nunca puede concederse permisos.
+CREATE TABLE IF NOT EXISTS public.user_roles (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  role TEXT NOT NULL CHECK (role IN ('admin')),
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE CHECK (char_length(trim(name)) > 0),
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+INSERT INTO public.categories (name)
+SELECT DISTINCT category FROM public.products WHERE category IS NOT NULL AND trim(category) <> ''
+ON CONFLICT (name) DO NOTHING;
+
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS BOOLEAN
+LANGUAGE sql
+STABLE
+SECURITY DEFINER
+SET search_path = public
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.user_roles
+    WHERE user_id = auth.uid() AND role = 'admin'
+  );
+$$;
 
 -- 3. Crear tabla `carts` (Soporte para sesiones de invitados via session_id y auth.users)
 CREATE TABLE IF NOT EXISTS public.carts (
@@ -37,6 +72,26 @@ CREATE TABLE IF NOT EXISTS public.cart_items (
   CONSTRAINT unique_cart_product UNIQUE (cart_id, product_id)
 );
 
+CREATE TABLE IF NOT EXISTS public.orders (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_number TEXT NOT NULL UNIQUE,
+  customer_email TEXT,
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'paid', 'shipped', 'cancelled')),
+  subtotal NUMERIC(10, 2) NOT NULL CHECK (subtotal >= 0),
+  shipping NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (shipping >= 0),
+  total NUMERIC(10, 2) NOT NULL CHECK (total >= 0),
+  created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.order_items (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id UUID NOT NULL REFERENCES public.orders(id) ON DELETE CASCADE,
+  product_id UUID REFERENCES public.products(id) ON DELETE SET NULL,
+  product_name TEXT NOT NULL,
+  unit_price NUMERIC(10, 2) NOT NULL CHECK (unit_price >= 0),
+  quantity INTEGER NOT NULL CHECK (quantity > 0)
+);
+
 -- 5. Crear índices de alto rendimiento
 CREATE INDEX IF NOT EXISTS idx_products_sku ON public.products(sku);
 CREATE INDEX IF NOT EXISTS idx_products_created_at ON public.products(created_at DESC);
@@ -44,11 +99,17 @@ CREATE INDEX IF NOT EXISTS idx_products_specs ON public.products USING gin(specs
 CREATE INDEX IF NOT EXISTS idx_carts_session_id ON public.carts(session_id);
 CREATE INDEX IF NOT EXISTS idx_carts_user_id ON public.carts(user_id);
 CREATE INDEX IF NOT EXISTS idx_cart_items_cart_id ON public.cart_items(cart_id);
+CREATE INDEX IF NOT EXISTS idx_orders_created_at ON public.orders(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_order_items_order_id ON public.order_items(order_id);
 
 -- 6. Habilitar Row Level Security (RLS) en todas las tablas
 ALTER TABLE public.products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.carts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.cart_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 
 -- 7. Políticas de RLS
 -- A) Products: Lectura y Escritura (para gestión Admin)
@@ -57,17 +118,52 @@ CREATE POLICY "Permitir lectura pública de productos"
   ON public.products FOR SELECT TO public USING (true);
 
 DROP POLICY IF EXISTS "Permitir escritura administrativa en productos" ON public.products;
-CREATE POLICY "Permitir escritura administrativa en productos"
-  ON public.products FOR ALL TO public USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Los administradores gestionan productos" ON public.products;
+CREATE POLICY "Los administradores gestionan productos"
+  ON public.products FOR ALL TO authenticated
+  USING (public.is_admin()) WITH CHECK (public.is_admin());
+
+DROP POLICY IF EXISTS "Usuarios consultan su propio rol" ON public.user_roles;
+CREATE POLICY "Usuarios consultan su propio rol"
+  ON public.user_roles FOR SELECT TO authenticated
+  USING (user_id = auth.uid());
+
+DROP POLICY IF EXISTS "Lectura pública de categorías" ON public.categories;
+CREATE POLICY "Lectura pública de categorías" ON public.categories FOR SELECT TO public USING (true);
+DROP POLICY IF EXISTS "Administradores gestionan categorías" ON public.categories;
+CREATE POLICY "Administradores gestionan categorías" ON public.categories FOR ALL TO authenticated
+  USING (public.is_admin()) WITH CHECK (public.is_admin());
+
+DROP POLICY IF EXISTS "Administradores consultan pedidos" ON public.orders;
+CREATE POLICY "Administradores consultan pedidos" ON public.orders FOR SELECT TO authenticated
+  USING (public.is_admin());
+DROP POLICY IF EXISTS "Administradores actualizan pedidos" ON public.orders;
+CREATE POLICY "Administradores actualizan pedidos" ON public.orders FOR UPDATE TO authenticated
+  USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS "Administradores consultan partidas de pedido" ON public.order_items;
+CREATE POLICY "Administradores consultan partidas de pedido" ON public.order_items FOR SELECT TO authenticated
+  USING (public.is_admin());
 
 -- B) Carts & Cart Items
+CREATE OR REPLACE FUNCTION public.current_cart_session_id()
+RETURNS TEXT LANGUAGE sql STABLE AS $$
+  SELECT COALESCE(current_setting('request.headers', true)::jsonb ->> 'x-session-id', '');
+$$;
+
+CREATE OR REPLACE FUNCTION public.can_access_cart(target_cart_id UUID)
+RETURNS BOOLEAN LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (SELECT 1 FROM public.carts WHERE id = target_cart_id AND session_id = public.current_cart_session_id());
+$$;
+
 DROP POLICY IF EXISTS "Permitir acceso a carritos por sesión o usuario" ON public.carts;
-CREATE POLICY "Permitir acceso a carritos por sesión o usuario"
-  ON public.carts FOR ALL TO public USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Sesión administra su carrito" ON public.carts;
+CREATE POLICY "Sesión administra su carrito" ON public.carts FOR ALL TO anon, authenticated
+  USING (session_id = public.current_cart_session_id()) WITH CHECK (session_id = public.current_cart_session_id());
 
 DROP POLICY IF EXISTS "Permitir acceso a items del carrito" ON public.cart_items;
-CREATE POLICY "Permitir acceso a items del carrito"
-  ON public.cart_items FOR ALL TO public USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Sesión administra partidas de su carrito" ON public.cart_items;
+CREATE POLICY "Sesión administra partidas de su carrito" ON public.cart_items FOR ALL TO anon, authenticated
+  USING (public.can_access_cart(cart_id)) WITH CHECK (public.can_access_cart(cart_id));
 
 -- 8. Habilitar Supabase Realtime
 ALTER PUBLICATION supabase_realtime ADD TABLE public.cart_items;
@@ -81,6 +177,17 @@ ON CONFLICT (id) DO NOTHING;
 DROP POLICY IF EXISTS "Lectura pública de imágenes de producto" ON storage.objects;
 CREATE POLICY "Lectura pública de imágenes de producto"
   ON storage.objects FOR SELECT TO public USING (bucket_id = 'product-images');
+
+DROP POLICY IF EXISTS "Administradores gestionan imágenes de producto" ON storage.objects;
+CREATE POLICY "Administradores gestionan imágenes de producto"
+  ON storage.objects FOR ALL TO authenticated
+  USING (bucket_id = 'product-images' AND public.is_admin())
+  WITH CHECK (bucket_id = 'product-images' AND public.is_admin());
+
+-- Después de crear un usuario en Authentication > Users, asígnale el rol:
+-- INSERT INTO public.user_roles (user_id, role)
+-- VALUES ('UUID_DEL_USUARIO', 'admin')
+-- ON CONFLICT (user_id) DO UPDATE SET role = EXCLUDED.role;
 
 -- =================================================================
 -- DATOS DE PRUEBA (SEED DATA)

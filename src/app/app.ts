@@ -36,7 +36,7 @@ import { AuthModalComponent } from './components/auth/auth-modal.component';
             <span class="w-6 h-6 rounded-lg bg-stone-900 text-white flex items-center justify-center font-bold text-xs">
               A
             </span>
-            <span class="font-bold text-stone-900 tracking-wider">AURA STOREFRONT</span>
+            <span class="font-bold text-stone-900 tracking-wider">Aidé storefront</span>
             <span class="text-stone-300">|</span>
             <span>Angular v17+ Standalone & Signals + Supabase Auth Protected</span>
           </div>
@@ -48,7 +48,7 @@ import { AuthModalComponent } from './components/auth/auth-modal.component';
           </div>
 
           <p class="text-stone-400">
-            &copy; 2026 Aura Design Inc. Todos los derechos reservados.
+            &copy; 2026 Aidé storefront. Todos los derechos reservados.
           </p>
         </div>
       </footer>
