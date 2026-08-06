@@ -6,6 +6,7 @@ import { ProductDetailModalComponent } from '../product-detail-modal/product-det
 import { Product } from '../../models/product.model';
 import { CategoryService } from '../../services/category.service';
 import { StorefrontSettingsService } from '../../services/storefront-settings.service';
+import { StorefrontCollectionService } from '../../services/storefront-collection.service';
 
 @Component({
   selector: 'app-product-grid',
@@ -27,35 +28,96 @@ import { StorefrontSettingsService } from '../../services/storefront-settings.se
         </p>
       </div>
 
-      <!-- Category Filter Tabs -->
-      <div class="flex items-center justify-center gap-2 overflow-x-auto pb-4 mb-8 no-scrollbar">
-        @for (category of categories(); track category) {
+      <!-- Department navigation -->
+      <section class="mb-10 rounded-3xl border border-stone-200/80 bg-white p-4 sm:p-6 shadow-sm">
+        <div class="flex flex-col gap-1 border-b border-stone-100 pb-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p class="text-xs font-bold uppercase tracking-[0.18em] text-stone-500">Explora la tienda</p>
+            <h2 class="mt-1 text-xl font-black tracking-tight text-stone-900">Comprar por departamento</h2>
+          </div>
+          <p class="text-xs text-stone-500">Elige un departamento para ver su catálogo.</p>
+        </div>
+
+        <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          @for (department of departments(); track department.name) {
           <button
-            (click)="productService.selectedCategory.set(category)"
-            class="px-4 py-2 rounded-2xl text-xs sm:text-sm font-medium transition-all duration-200 whitespace-nowrap active:scale-95"
+            (click)="productService.selectedCategory.set(department.name)"
+            [attr.aria-pressed]="productService.selectedCategory() === department.name"
+            class="group min-h-24 rounded-2xl border p-3 text-left transition-all duration-200 active:scale-[0.98]"
             [ngClass]="{
-              'bg-stone-900 text-white shadow-soft font-semibold': productService.selectedCategory() === category,
-              'bg-white text-stone-600 hover:bg-stone-100 hover:text-stone-900 border border-stone-200/80': productService.selectedCategory() !== category
+              'border-stone-900 bg-stone-900 text-white shadow-lg': productService.selectedCategory() === department.name,
+              'border-stone-200/80 bg-stone-50/50 text-stone-700 hover:border-stone-400 hover:bg-white': productService.selectedCategory() !== department.name
             }"
           >
-            {{ category }}
+            <span class="mb-3 flex h-8 w-8 items-center justify-center rounded-xl text-sm" [ngClass]="productService.selectedCategory() === department.name ? 'bg-white/15 text-white' : 'bg-stone-200/70 text-stone-700'">
+              {{ department.name === 'Todos' ? '⌘' : '▦' }}
+            </span>
+            <span class="block text-sm font-bold leading-tight">{{ department.name === 'Todos' ? 'Todos los departamentos' : department.name }}</span>
+            <span class="mt-1 block text-xs" [ngClass]="productService.selectedCategory() === department.name ? 'text-stone-300' : 'text-stone-500'">{{ department.count }} {{ department.count === 1 ? 'producto' : 'productos' }}</span>
           </button>
         }
-      </div>
+        </div>
+      </section>
+
+      @if (brandStores().length > 0) {
+        <section class="mb-10 rounded-3xl border border-stone-200/80 bg-white p-4 sm:p-6 shadow-sm">
+          <div class="flex flex-col gap-1 border-b border-stone-100 pb-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-[0.18em] text-stone-500">Espacios especiales</p>
+              <h2 class="mt-1 text-xl font-black tracking-tight text-stone-900">Mini tiendas por marca</h2>
+            </div>
+            <p class="text-xs text-stone-500">Cada marca reúne su catálogo completo.</p>
+          </div>
+          <div class="mt-4 flex flex-wrap gap-2">
+            @for (store of brandStores(); track store.name) {
+              <button (click)="selectBrandStore(store.name)" [attr.aria-pressed]="selectedBrand() === store.name" class="rounded-2xl border px-4 py-3 text-left transition-all active:scale-[0.98]" [ngClass]="selectedBrand() === store.name ? 'border-stone-900 bg-stone-900 text-white shadow-lg' : 'border-stone-200 bg-stone-50/50 text-stone-700 hover:border-stone-400 hover:bg-white'">
+                <span class="block text-sm font-black">{{ store.name }}</span>
+                <span class="mt-0.5 block text-xs" [ngClass]="selectedBrand() === store.name ? 'text-stone-300' : 'text-stone-500'">{{ store.count }} {{ store.count === 1 ? 'producto' : 'productos' }}</span>
+              </button>
+            }
+          </div>
+        </section>
+      }
+
+      @if (collectionService.collections().length > 0) {
+        <section class="mb-10 rounded-3xl border border-stone-200/80 bg-white p-4 sm:p-6 shadow-sm">
+          <div class="flex flex-col gap-1 border-b border-stone-100 pb-4 sm:flex-row sm:items-end sm:justify-between">
+            <div><p class="text-xs font-bold uppercase tracking-[0.18em] text-stone-500">Selecciones curadas</p><h2 class="mt-1 text-xl font-black tracking-tight text-stone-900">Mini tiendas</h2></div>
+            <p class="text-xs text-stone-500">Colecciones creadas por nuestro equipo.</p>
+          </div>
+          <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            @for (collection of collectionService.collections(); track collection.id) {
+              <button (click)="selectCollection(collection.id)" [attr.aria-pressed]="selectedCollectionId() === collection.id" class="rounded-2xl border p-4 text-left transition-all active:scale-[0.98]" [ngClass]="selectedCollectionId() === collection.id ? 'border-stone-900 bg-stone-900 text-white shadow-lg' : 'border-stone-200 bg-stone-50/50 text-stone-700 hover:border-stone-400 hover:bg-white'">
+                <span class="block text-base font-black">{{ collection.name }}</span>
+                @if (collection.description) { <span class="mt-1 block text-xs leading-relaxed" [ngClass]="selectedCollectionId() === collection.id ? 'text-stone-300' : 'text-stone-500'">{{ collection.description }}</span> }
+                <span class="mt-3 block text-xs font-semibold" [ngClass]="selectedCollectionId() === collection.id ? 'text-stone-300' : 'text-stone-500'">{{ collection.productIds.length }} {{ collection.productIds.length === 1 ? 'producto' : 'productos' }}</span>
+              </button>
+            }
+          </div>
+        </section>
+      }
 
       <!-- Active Search Tag Bar (if searching) -->
-      @if (productService.searchQuery()) {
+      @if (productService.searchQuery() || selectedBrand() || selectedCollectionId()) {
         <div class="mb-6 flex items-center justify-between bg-stone-100/70 p-3 rounded-2xl border border-stone-200/50">
           <div class="flex items-center gap-2 text-xs text-stone-600">
-            <span>Resultados para:</span>
-            <span class="font-bold text-stone-900 bg-white px-2.5 py-1 rounded-lg border border-stone-200">
+            @if (productService.searchQuery()) {
+              <span>Resultados para:</span>
+              <span class="font-bold text-stone-900 bg-white px-2.5 py-1 rounded-lg border border-stone-200">
               "{{ productService.searchQuery() }}"
-            </span>
+              </span>
+            }
+            @if (selectedBrand()) {
+              <span class="font-bold text-stone-900 bg-white px-2.5 py-1 rounded-lg border border-stone-200">Mini tienda: {{ selectedBrand() }}</span>
+            }
+            @if (selectedCollection()) {
+              <span class="font-bold text-stone-900 bg-white px-2.5 py-1 rounded-lg border border-stone-200">Mini tienda: {{ selectedCollection()!.name }}</span>
+            }
             <span class="text-stone-400">({{ filteredProducts().length }} {{ filteredProducts().length === 1 ? 'producto' : 'productos' }})</span>
           </div>
 
           <button
-            (click)="productService.searchQuery.set('')"
+            (click)="resetFilters()"
             class="text-xs font-semibold text-stone-500 hover:text-stone-900 transition-colors"
           >
             Limpiar filtro
@@ -126,7 +188,10 @@ export class ProductGridComponent {
   public productService = inject(ProductService);
   public categoryService = inject(CategoryService);
   public storefrontSettings = inject(StorefrontSettingsService);
+  public collectionService = inject(StorefrontCollectionService);
   public selectedProductModal = signal<Product | null>(null);
+  public selectedBrand = signal<string | null>(null);
+  public selectedCollectionId = signal<string | null>(null);
 
   constructor() {
     void this.storefrontSettings.load();
@@ -140,11 +205,36 @@ export class ProductGridComponent {
     });
   });
 
+  public departments = computed(() => {
+    const products = this.productService.products();
+    return this.categories().map(name => ({
+      name,
+      count: name === 'Todos'
+        ? products.length
+        : products.filter(product => product.category?.toLowerCase() === name.toLowerCase()).length,
+    }));
+  });
+
+  public brandStores = computed(() => {
+    const grouped = new Map<string, number>();
+    for (const product of this.productService.products()) {
+      const brand = product.brand?.trim();
+      if (brand) grouped.set(brand, (grouped.get(brand) ?? 0) + 1);
+    }
+    return [...grouped.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  });
+
+  public selectedCollection = computed(() => this.collectionService.collections().find(collection => collection.id === this.selectedCollectionId()) ?? null);
+
   // Computed filtering for performance
   public filteredProducts = computed(() => {
     const all = this.productService.products();
     const query = this.productService.searchQuery().toLowerCase().trim();
     const category = this.productService.selectedCategory();
+    const brand = this.selectedBrand()?.toLowerCase();
+    const collection = this.selectedCollection();
 
     return all.filter((p) => {
       const matchesCategory =
@@ -157,12 +247,29 @@ export class ProductGridComponent {
         p.sku.toLowerCase().includes(query) ||
         JSON.stringify(p.specs).toLowerCase().includes(query);
 
-      return matchesCategory && matchesQuery;
+      const matchesBrand = !brand || p.brand?.toLowerCase() === brand;
+      const matchesCollection = !collection || collection.productIds.includes(p.id);
+
+      return matchesCategory && matchesQuery && matchesBrand && matchesCollection;
     });
   });
 
   public resetFilters(): void {
     this.productService.searchQuery.set('');
+    this.productService.selectedCategory.set('Todos');
+    this.selectedBrand.set(null);
+    this.selectedCollectionId.set(null);
+  }
+
+  public selectBrandStore(brand: string): void {
+    this.selectedBrand.set(this.selectedBrand() === brand ? null : brand);
+    this.productService.selectedCategory.set('Todos');
+    this.selectedCollectionId.set(null);
+  }
+
+  public selectCollection(collectionId: string): void {
+    this.selectedCollectionId.set(this.selectedCollectionId() === collectionId ? null : collectionId);
+    this.selectedBrand.set(null);
     this.productService.selectedCategory.set('Todos');
   }
 }

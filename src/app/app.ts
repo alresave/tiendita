@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavbarComponent } from './components/navbar/navbar.component';
 import { ProductGridComponent } from './components/product-grid/product-grid.component';
@@ -6,6 +6,7 @@ import { CartDrawerComponent } from './components/cart-drawer/cart-drawer.compon
 import { ToastContainerComponent } from './components/toast-container/toast-container.component';
 import { AdminDashboardComponent } from './components/admin/admin-dashboard/admin-dashboard.component';
 import { AuthModalComponent } from './components/auth/auth-modal.component';
+import { StorefrontSettingsService } from './services/storefront-settings.service';
 
 @Component({
   selector: 'app-root',
@@ -20,7 +21,7 @@ import { AuthModalComponent } from './components/auth/auth-modal.component';
     AuthModalComponent,
   ],
   template: `
-    <div class="min-h-screen flex flex-col bg-stone-50 font-sans selection:bg-stone-900 selection:text-white">
+    <div class="min-h-screen flex flex-col bg-stone-50 font-sans selection:bg-stone-900 selection:text-white" [class]="'theme-' + storefrontSettings.settings().theme">
       <!-- Navbar Header -->
       <app-navbar></app-navbar>
 
@@ -61,4 +62,10 @@ import { AuthModalComponent } from './components/auth/auth-modal.component';
     </div>
   `
 })
-export class App {}
+export class App {
+  public storefrontSettings = inject(StorefrontSettingsService);
+
+  constructor() {
+    void this.storefrontSettings.load();
+  }
+}

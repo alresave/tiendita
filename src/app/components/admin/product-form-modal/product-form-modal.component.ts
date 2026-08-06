@@ -60,8 +60,8 @@ interface SpecRow {
             <!-- Form -->
             <form (ngSubmit)="onSubmit()" class="space-y-5">
               
-              <!-- SKU & Category -->
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <!-- SKU, category & brand -->
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
                   <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">SKU *</label>
                   <input
@@ -91,6 +91,24 @@ interface SpecRow {
                     }
                   </datalist>
                   <p class="mt-1 text-[10px] text-stone-400">Puedes escribir una categoría nueva.</p>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">Marca / mini tienda</label>
+                  <input
+                    type="text"
+                    [(ngModel)]="formData.brand"
+                    name="brand"
+                    list="product-brands"
+                    placeholder="Ej: Sony"
+                    class="w-full px-3.5 py-2.5 text-sm bg-stone-50 rounded-xl border border-stone-200 focus:bg-white focus:ring-2 focus:ring-stone-900 focus:outline-none"
+                  />
+                  <datalist id="product-brands">
+                    @for (brand of availableBrands(); track brand) {
+                      <option [value]="brand"></option>
+                    }
+                  </datalist>
+                  <p class="mt-1 text-[10px] text-stone-400">Agrupa productos en una mini tienda.</p>
                 </div>
               </div>
 
@@ -281,6 +299,9 @@ export class ProductFormComponent implements OnInit {
   public availableCategories = computed(() => {
     return this.categoryService.names();
   });
+  public availableBrands = computed(() => {
+    return [...new Set(this.productService.products().map(product => product.brand?.trim()).filter((brand): brand is string => Boolean(brand)))].sort((a, b) => a.localeCompare(b));
+  });
 
   public formData: Partial<Product> = {
     sku: '',
@@ -367,6 +388,7 @@ export class ProductFormComponent implements OnInit {
       sku: this.formData.sku.trim(),
       name: this.formData.name.trim(),
       category: this.formData.category?.trim() || 'General',
+      brand: this.formData.brand?.trim() || null,
       description: this.formData.description.trim(),
       price: Number(this.formData.price),
       stock: Number(this.formData.stock),

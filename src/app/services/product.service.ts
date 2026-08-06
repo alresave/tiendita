@@ -23,6 +23,7 @@ const MOCK_PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=1000&q=80',
     ],
     category: 'Audio',
+    brand: 'Sonic',
   },
   {
     id: '1a2b3c4d-0002-4000-8000-000000000002',
@@ -43,6 +44,7 @@ const MOCK_PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&w=1000&q=80',
     ],
     category: 'Periféricos',
+    brand: 'Nexa',
   },
   {
     id: '1a2b3c4d-0003-4000-8000-000000000003',
@@ -62,6 +64,7 @@ const MOCK_PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=1000&q=80',
     ],
     category: 'Audio',
+    brand: 'Sonic',
   },
   {
     id: '1a2b3c4d-0004-4000-8000-000000000004',
@@ -80,6 +83,7 @@ const MOCK_PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=1000&q=80',
     ],
     category: 'Periféricos',
+    brand: 'Nexa',
   },
   {
     id: '1a2b3c4d-0005-4000-8000-000000000005',
@@ -98,6 +102,7 @@ const MOCK_PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=1000&q=80',
     ],
     category: 'Iluminación',
+    brand: 'Lumina',
   },
   {
     id: '1a2b3c4d-0006-4000-8000-000000000006',
@@ -116,6 +121,7 @@ const MOCK_PRODUCTS: Product[] = [
       'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=1000&q=80',
     ],
     category: 'Monitores',
+    brand: 'Vertex',
   },
 ];
 
@@ -193,6 +199,7 @@ export class ProductService {
           price: productData.price,
           stock: productData.stock,
           category: productData.category,
+          brand: productData.brand,
           specs: productData.specs,
           images: productData.images,
         })

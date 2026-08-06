@@ -1,7 +1,7 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { SupabaseService } from './supabase.service';
 import { ToastService } from './toast.service';
-import { DEFAULT_STOREFRONT_SETTINGS, StorefrontSettings } from '../models/storefront-settings.model';
+import { DEFAULT_STOREFRONT_SETTINGS, STOREFRONT_THEMES, StorefrontSettings, StorefrontTheme } from '../models/storefront-settings.model';
 
 @Injectable({ providedIn: 'root' })
 export class StorefrontSettingsService {
@@ -20,7 +20,10 @@ export class StorefrontSettingsService {
       return;
     }
     const values = Object.fromEntries((data ?? []).map((item: { key: string; value: string }) => [item.key, item.value]));
-    this.settings.set({ ...DEFAULT_STOREFRONT_SETTINGS, ...values });
+    const theme = STOREFRONT_THEMES.some(item => item.id === values['theme'])
+      ? values['theme'] as StorefrontTheme
+      : DEFAULT_STOREFRONT_SETTINGS.theme;
+    this.settings.set({ ...DEFAULT_STOREFRONT_SETTINGS, ...values, theme });
   }
 
   public async save(settings: StorefrontSettings): Promise<boolean> {

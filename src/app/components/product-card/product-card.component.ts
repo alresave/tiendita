@@ -51,6 +51,10 @@ import { CartService } from '../../services/cart.service';
           </span>
         </div>
 
+        @if (product.brand) {
+          <span class="mb-2 inline-flex rounded-full bg-stone-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-stone-600">{{ product.brand }}</span>
+        }
+
         <!-- Product Title -->
         <h3 
           (click)="openDetail.emit(product)"

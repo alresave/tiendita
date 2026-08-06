@@ -13,6 +13,7 @@ export interface Product {
   images: string[];
   created_at?: string;
   category?: string;
+  brand?: string | null;
 }
 
 export interface ProductFilter {
@@ -20,4 +21,5 @@ export interface ProductFilter {
   maxPrice?: number;
   inStockOnly?: boolean;
   category?: string;
+  brand?: string;
 }

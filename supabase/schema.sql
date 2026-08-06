@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS public.products (
   price NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
   stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
   category TEXT NOT NULL DEFAULT 'General',
+  brand TEXT,
   specs JSONB DEFAULT '{}'::jsonb,
   images TEXT[] DEFAULT ARRAY[]::TEXT[],
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
@@ -22,6 +23,7 @@ CREATE TABLE IF NOT EXISTS public.products (
 
 -- Compatible con instalaciones creadas antes de que se añadiera la categoría.
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'General';
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS brand TEXT;
 
 -- Roles de aplicación. Solo se asignan desde el Dashboard de Supabase o con la
 -- service_role; el cliente nunca puede concederse permisos.
@@ -38,6 +40,7 @@ CREATE TABLE IF NOT EXISTS public.storefront_settings (
 );
 
 INSERT INTO public.storefront_settings (key, value) VALUES
+  ('theme', 'classic'),
   ('heroBadge', 'Diseño & Tecnología Premium'),
   ('heroTitle', 'Colección Exclusiva de Productos'),
   ('heroTagline', 'Piezas seleccionadas con materiales sostenibles, acústica afinada y acabados minimalistas para elevar tu espacio de trabajo.'),
@@ -50,6 +53,20 @@ CREATE TABLE IF NOT EXISTS public.categories (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   name TEXT NOT NULL UNIQUE CHECK (char_length(trim(name)) > 0),
   created_at TIMESTAMPTZ DEFAULT NOW() NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS public.storefront_collections (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE CHECK (char_length(trim(name)) > 0),
+  description TEXT NOT NULL DEFAULT '',
+  is_visible BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS public.collection_products (
+  collection_id UUID NOT NULL REFERENCES public.storefront_collections(id) ON DELETE CASCADE,
+  product_id UUID NOT NULL REFERENCES public.products(id) ON DELETE CASCADE,
+  PRIMARY KEY (collection_id, product_id)
 );
 
 INSERT INTO public.categories (name)
@@ -109,6 +126,8 @@ CREATE TABLE IF NOT EXISTS public.order_items (
 
 -- 5. Crear índices de alto rendimiento
 CREATE INDEX IF NOT EXISTS idx_products_sku ON public.products(sku);
+CREATE INDEX IF NOT EXISTS idx_products_brand ON public.products (brand) WHERE brand IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_collection_products_product_id ON public.collection_products (product_id);
 CREATE INDEX IF NOT EXISTS idx_products_created_at ON public.products(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_products_specs ON public.products USING gin(specs);
 CREATE INDEX IF NOT EXISTS idx_carts_session_id ON public.carts(session_id);
@@ -124,6 +143,8 @@ ALTER TABLE public.cart_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.user_roles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.storefront_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.storefront_collections ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.collection_products ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.order_items ENABLE ROW LEVEL SECURITY;
 
@@ -159,6 +180,16 @@ CREATE POLICY "Lectura pública de categorías" ON public.categories FOR SELECT 
 DROP POLICY IF EXISTS "Administradores gestionan categorías" ON public.categories;
 CREATE POLICY "Administradores gestionan categorías" ON public.categories FOR ALL TO authenticated
   USING (public.is_admin()) WITH CHECK (public.is_admin());
+
+DROP POLICY IF EXISTS "Lectura pública de mini tiendas" ON public.storefront_collections;
+CREATE POLICY "Lectura pública de mini tiendas" ON public.storefront_collections FOR SELECT TO public USING (is_visible);
+DROP POLICY IF EXISTS "Administradores gestionan mini tiendas" ON public.storefront_collections;
+CREATE POLICY "Administradores gestionan mini tiendas" ON public.storefront_collections FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
+DROP POLICY IF EXISTS "Lectura pública de productos de mini tiendas" ON public.collection_products;
+CREATE POLICY "Lectura pública de productos de mini tiendas" ON public.collection_products FOR SELECT TO public
+  USING (EXISTS (SELECT 1 FROM public.storefront_collections WHERE id = collection_id AND is_visible));
+DROP POLICY IF EXISTS "Administradores gestionan productos de mini tiendas" ON public.collection_products;
+CREATE POLICY "Administradores gestionan productos de mini tiendas" ON public.collection_products FOR ALL TO authenticated USING (public.is_admin()) WITH CHECK (public.is_admin());
 
 DROP POLICY IF EXISTS "Administradores consultan pedidos" ON public.orders;
 CREATE POLICY "Administradores consultan pedidos" ON public.orders FOR SELECT TO authenticated

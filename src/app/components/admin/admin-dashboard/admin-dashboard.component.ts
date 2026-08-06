@@ -8,7 +8,9 @@ import { OrderService } from '../../../services/order.service';
 import { Product } from '../../../models/product.model';
 import { ProductFormComponent } from '../product-form-modal/product-form-modal.component';
 import { StorefrontSettingsService } from '../../../services/storefront-settings.service';
-import { StorefrontSettings } from '../../../models/storefront-settings.model';
+import { STOREFRONT_THEMES, StorefrontSettings, StorefrontTheme } from '../../../models/storefront-settings.model';
+import { StorefrontCollectionService } from '../../../services/storefront-collection.service';
+import { StorefrontCollection } from '../../../models/storefront-collection.model';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -62,6 +64,12 @@ import { StorefrontSettings } from '../../../models/storefront-settings.model';
                 </button>
                 <button (click)="toggleContentManager()" class="px-4 py-2.5 rounded-2xl bg-stone-800 text-white font-bold text-xs hover:bg-stone-700 transition-all">
                   Inicio
+                </button>
+                <button (click)="toggleThemeManager()" class="px-4 py-2.5 rounded-2xl bg-stone-800 text-white font-bold text-xs hover:bg-stone-700 transition-all">
+                  Temas
+                </button>
+                <button (click)="toggleCollectionManager()" class="px-4 py-2.5 rounded-2xl bg-stone-800 text-white font-bold text-xs hover:bg-stone-700 transition-all">
+                  Mini tiendas
                 </button>
                 <button (click)="isAdminManagerOpen.update(value => !value)" class="px-4 py-2.5 rounded-2xl bg-stone-800 text-white font-bold text-xs hover:bg-stone-700 transition-all">
                   Administradores
@@ -173,6 +181,53 @@ import { StorefrontSettings } from '../../../models/storefront-settings.model';
               </section>
             }
 
+            @if (isThemeManagerOpen()) {
+              <section class="p-6 border-b border-stone-100 bg-stone-50">
+                <div class="flex items-center justify-between gap-3 mb-4">
+                  <div><h3 class="font-bold text-stone-900">Apariencia de la tienda</h3><p class="text-xs text-stone-500 mt-1">El tema elegido se publica para todos los visitantes.</p></div>
+                  <button (click)="saveTheme()" class="px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold">Guardar tema</button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+                  @for (theme of storefrontThemes; track theme.id) {
+                    <button (click)="themeDraft = theme.id" class="text-left rounded-2xl border-2 p-3 transition-all" [ngClass]="themeDraft === theme.id ? 'border-stone-900 bg-white shadow-sm' : 'border-stone-200 bg-white/70 hover:border-stone-400'">
+                      <span class="block h-10 rounded-xl mb-3" [ngClass]="themePreviewClass(theme.id)"></span>
+                      <span class="block text-sm font-bold text-stone-900">{{ theme.name }}</span>
+                      <span class="block text-xs text-stone-500 mt-1">{{ theme.description }}</span>
+                    </button>
+                  }
+                </div>
+              </section>
+            }
+
+            @if (isCollectionManagerOpen()) {
+              <section class="p-6 border-b border-stone-100 bg-stone-50">
+                <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
+                  <label class="flex-1 text-xs font-semibold text-stone-600">Nombre de la mini tienda<input [(ngModel)]="newCollectionName" class="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 font-normal" placeholder="Ej. Regalos para oficina" /></label>
+                  <label class="flex-1 text-xs font-semibold text-stone-600">Descripción (opcional)<input [(ngModel)]="newCollectionDescription" class="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 font-normal" placeholder="Una selección especial" /></label>
+                  <button (click)="createCollection()" class="px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold">Crear</button>
+                </div>
+                @if (collectionService.collections().length === 0) {
+                  <p class="mt-4 text-xs text-stone-500">Crea una mini tienda para seleccionar sus productos manualmente.</p>
+                } @else {
+                  <div class="mt-4 flex flex-wrap gap-2">
+                    @for (collection of collectionService.collections(); track collection.id) {
+                      <button (click)="selectedCollectionForEditId = collection.id" class="rounded-xl border px-3 py-2 text-left text-xs" [ngClass]="selectedCollectionForEditId === collection.id ? 'border-stone-900 bg-stone-900 text-white' : 'border-stone-200 bg-white text-stone-700'">{{ collection.name }} <span class="opacity-70">({{ collection.productIds.length }})</span></button>
+                    }
+                  </div>
+                  @if (collectionForEdit()) {
+                    <div class="mt-4 rounded-2xl border border-stone-200 bg-white p-4">
+                      <div class="mb-3 flex items-center justify-between gap-3"><div><h3 class="font-bold text-stone-900">{{ collectionForEdit()!.name }}</h3><p class="text-xs text-stone-500">Marca los productos que formarán parte de esta mini tienda.</p></div><button (click)="deleteCollection(collectionForEdit()!)" class="text-xs font-semibold text-rose-600">Eliminar mini tienda</button></div>
+                      <div class="grid max-h-56 grid-cols-1 gap-2 overflow-y-auto sm:grid-cols-2 lg:grid-cols-3">
+                        @for (product of productService.products(); track product.id) {
+                          <label class="flex cursor-pointer items-center gap-2 rounded-xl border border-stone-100 p-2 text-xs hover:bg-stone-50"><input type="checkbox" [checked]="collectionForEdit()!.productIds.includes(product.id)" (change)="toggleCollectionProduct(product.id)" /><span class="min-w-0"><span class="block truncate font-semibold text-stone-800">{{ product.name }}</span><span class="text-stone-400">{{ product.category }}</span></span></label>
+                        }
+                      </div>
+                    </div>
+                  }
+                }
+              </section>
+            }
+
             @if (isAdminManagerOpen()) {
               <section class="p-6 border-b border-stone-100 bg-stone-50">
                 <h3 class="font-bold text-stone-900">Agregar administrador</h3>
@@ -211,6 +266,7 @@ import { StorefrontSettings } from '../../../models/storefront-settings.model';
                       <th class="p-3.5">Producto</th>
                       <th class="p-3.5">SKU</th>
                       <th class="p-3.5">Categoría</th>
+                      <th class="p-3.5">Marca</th>
                       <th class="p-3.5">Precio</th>
                       <th class="p-3.5">Stock</th>
                       <th class="p-3.5 text-right">Acciones</th>
@@ -247,6 +303,8 @@ import { StorefrontSettings } from '../../../models/storefront-settings.model';
                             {{ product.category || 'General' }}
                           </span>
                         </td>
+
+                        <td class="p-3.5 text-stone-600">{{ product.brand || '—' }}</td>
 
                         <!-- Price -->
                         <td class="p-3.5 font-bold font-mono text-stone-900">
@@ -322,6 +380,7 @@ export class AdminDashboardComponent {
   public categoryService = inject(CategoryService);
   public orderService = inject(OrderService);
   public storefrontSettingsService = inject(StorefrontSettingsService);
+  public collectionService = inject(StorefrontCollectionService);
 
   public adminSearch = '';
   public isFormModalOpen = signal<boolean>(false);
@@ -329,11 +388,18 @@ export class AdminDashboardComponent {
   public isCategoryManagerOpen = signal<boolean>(false);
   public isOrdersOpen = signal<boolean>(false);
   public isContentManagerOpen = signal<boolean>(false);
+  public isThemeManagerOpen = signal<boolean>(false);
+  public isCollectionManagerOpen = signal<boolean>(false);
   public isAdminManagerOpen = signal<boolean>(false);
   public isInvitingAdmin = signal<boolean>(false);
   public newCategoryName = '';
   public newAdminEmail = '';
   public storefrontDraft: StorefrontSettings = { ...this.storefrontSettingsService.settings() };
+  public themeDraft: StorefrontTheme = this.storefrontSettingsService.settings().theme;
+  public storefrontThemes = STOREFRONT_THEMES;
+  public newCollectionName = '';
+  public newCollectionDescription = '';
+  public selectedCollectionForEditId: string | null = null;
 
   public async saveStorefrontContent(): Promise<void> {
     await this.storefrontSettingsService.save(this.storefrontDraft);
@@ -342,6 +408,46 @@ export class AdminDashboardComponent {
   public toggleContentManager(): void {
     this.isContentManagerOpen.update(value => !value);
     if (this.isContentManagerOpen()) this.storefrontDraft = { ...this.storefrontSettingsService.settings() };
+  }
+
+  public toggleThemeManager(): void {
+    this.isThemeManagerOpen.update(value => !value);
+    if (this.isThemeManagerOpen()) this.themeDraft = this.storefrontSettingsService.settings().theme;
+  }
+
+  public async saveTheme(): Promise<void> {
+    const current = this.storefrontSettingsService.settings();
+    await this.storefrontSettingsService.save({ ...current, theme: this.themeDraft });
+  }
+
+  public themePreviewClass(theme: StorefrontTheme): string {
+    return `theme-preview-${theme}`;
+  }
+
+  public toggleCollectionManager(): void {
+    this.isCollectionManagerOpen.update(value => !value);
+    if (this.isCollectionManagerOpen() && !this.selectedCollectionForEditId) this.selectedCollectionForEditId = this.collectionService.collections()[0]?.id ?? null;
+  }
+
+  public collectionForEdit = computed(() => this.collectionService.collections().find(collection => collection.id === this.selectedCollectionForEditId) ?? null);
+
+  public async createCollection(): Promise<void> {
+    if (await this.collectionService.create(this.newCollectionName, this.newCollectionDescription)) {
+      this.selectedCollectionForEditId = this.collectionService.collections().at(-1)?.id ?? null;
+      this.newCollectionName = '';
+      this.newCollectionDescription = '';
+    }
+  }
+
+  public async toggleCollectionProduct(productId: string): Promise<void> {
+    const collection = this.collectionForEdit();
+    if (collection) await this.collectionService.toggleProduct(collection, productId);
+  }
+
+  public async deleteCollection(collection: StorefrontCollection): Promise<void> {
+    if (confirm(`¿Eliminar la mini tienda "${collection.name}"?`)) {
+      if (await this.collectionService.remove(collection)) this.selectedCollectionForEditId = this.collectionService.collections()[0]?.id ?? null;
+    }
   }
 
   public async inviteAdmin(): Promise<void> {
@@ -381,7 +487,8 @@ export class AdminDashboardComponent {
       (p) =>
         p.name.toLowerCase().includes(query) ||
         p.sku.toLowerCase().includes(query) ||
-        p.category?.toLowerCase().includes(query)
+        p.category?.toLowerCase().includes(query) ||
+        p.brand?.toLowerCase().includes(query)
     );
   });
 
