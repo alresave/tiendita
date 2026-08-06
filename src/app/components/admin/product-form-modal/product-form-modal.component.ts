@@ -21,12 +21,12 @@ interface SpecRow {
         <!-- Backdrop -->
         <div 
           (click)="close.emit()"
-          class="fixed inset-0 bg-stone-900/60 backdrop-blur-sm transition-opacity animate-fade-in"
+          class="fixed inset-0 hidden bg-stone-900/60 backdrop-blur-sm transition-opacity animate-fade-in sm:block"
         ></div>
 
-        <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-6">
+        <div class="flex min-h-[100dvh] items-stretch justify-center text-center sm:min-h-full sm:items-center sm:p-6">
           <div 
-            class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-stone-100 animate-slide-up p-6 sm:p-8"
+            class="relative min-h-[100dvh] w-full transform overflow-hidden bg-white p-4 text-left transition-all animate-slide-up sm:my-8 sm:min-h-0 sm:max-w-2xl sm:rounded-3xl sm:border sm:border-stone-100 sm:p-8 sm:shadow-2xl"
           >
             <!-- Header -->
             <div class="flex items-center justify-between pb-4 mb-6 border-b border-stone-100">
@@ -48,7 +48,7 @@ interface SpecRow {
 
               <button
                 (click)="close.emit()"
-                class="p-2 rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
+                class="flex h-11 w-11 items-center justify-center rounded-full text-stone-400 transition-colors hover:bg-stone-100 hover:text-stone-600"
                 aria-label="Cerrar modal"
               >
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

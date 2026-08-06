@@ -15,7 +15,7 @@ import { CartService } from '../../services/cart.service';
           class="fixed inset-0 bg-stone-900/50 backdrop-blur-sm transition-opacity animate-fade-in"
         ></div>
 
-        <div class="fixed inset-y-0 right-0 max-w-full flex pl-10">
+        <div class="fixed inset-y-0 right-0 flex max-w-full pl-0 sm:pl-10">
           <!-- Slide Panel Container -->
           <div 
             class="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between transform transition-transform duration-300 ease-in-out animate-slide-left border-l border-stone-100"
@@ -114,19 +114,19 @@ import { CartService } from '../../services/cart.service';
                         <div class="flex items-center gap-2 mt-2">
                           <button
                             (click)="cartService.updateQuantity(item.product.id, item.quantity - 1)"
-                            class="w-6 h-6 rounded-lg bg-white border border-stone-200 text-stone-600 hover:bg-stone-100 flex items-center justify-center text-xs font-bold transition-colors"
+                            class="w-11 h-11 rounded-xl bg-white border border-stone-200 text-stone-600 hover:bg-stone-100 flex items-center justify-center text-sm font-bold transition-colors"
                             aria-label="Disminuir cantidad"
                           >
                             -
                           </button>
                           
-                          <span class="text-xs font-bold text-stone-800 min-w-[1.2rem] text-center font-mono">
+                          <span class="text-sm font-bold text-stone-800 min-w-8 text-center font-mono">
                             {{ item.quantity }}
                           </span>
 
                           <button
                             (click)="cartService.updateQuantity(item.product.id, item.quantity + 1)"
-                            class="w-6 h-6 rounded-lg bg-white border border-stone-200 text-stone-600 hover:bg-stone-100 flex items-center justify-center text-xs font-bold transition-colors"
+                            class="w-11 h-11 rounded-xl bg-white border border-stone-200 text-stone-600 hover:bg-stone-100 flex items-center justify-center text-sm font-bold transition-colors"
                             aria-label="Aumentar cantidad"
                           >
                             +

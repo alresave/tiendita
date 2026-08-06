@@ -7,6 +7,10 @@ import { ToastContainerComponent } from './components/toast-container/toast-cont
 import { AdminDashboardComponent } from './components/admin/admin-dashboard/admin-dashboard.component';
 import { AuthModalComponent } from './components/auth/auth-modal.component';
 import { StorefrontSettingsService } from './services/storefront-settings.service';
+import { ProductService } from './services/product.service';
+import { CartService } from './services/cart.service';
+import { AuthService } from './services/auth.service';
+import { ToastService } from './services/toast.service';
 
 @Component({
   selector: 'app-root',
@@ -55,15 +59,27 @@ import { StorefrontSettingsService } from './services/storefront-settings.servic
       </footer>
 
       <!-- Side Drawers, Auth & Admin Overlays -->
-      <app-cart-drawer></app-cart-drawer>
-      <app-admin-dashboard></app-admin-dashboard>
-      <app-auth-modal></app-auth-modal>
-      <app-toast-container></app-toast-container>
+      @defer (when cartService.isDrawerOpen()) {
+        <app-cart-drawer></app-cart-drawer>
+      }
+      @defer (when productService.isAdminOpen()) {
+        <app-admin-dashboard></app-admin-dashboard>
+      }
+      @defer (when authService.isAuthModalOpen()) {
+        <app-auth-modal></app-auth-modal>
+      }
+      @defer (when toastService.toasts().length > 0) {
+        <app-toast-container></app-toast-container>
+      }
     </div>
   `
 })
 export class App {
   public storefrontSettings = inject(StorefrontSettingsService);
+  public productService = inject(ProductService);
+  public cartService = inject(CartService);
+  public authService = inject(AuthService);
+  public toastService = inject(ToastService);
 
   constructor() {
     void this.storefrontSettings.load();

@@ -177,10 +177,12 @@ import { StorefrontCollectionService } from '../../services/storefront-collectio
       }
 
       <!-- Detail Modal -->
-      <app-product-detail-modal
-        [product]="selectedProductModal()"
-        (close)="selectedProductModal.set(null)"
-      ></app-product-detail-modal>
+      @defer (when selectedProductModal()) {
+        <app-product-detail-modal
+          [product]="selectedProductModal()"
+          (close)="selectedProductModal.set(null)"
+        ></app-product-detail-modal>
+      }
     </section>
   `
 })

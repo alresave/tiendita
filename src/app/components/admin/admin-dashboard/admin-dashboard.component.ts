@@ -22,15 +22,15 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
         <!-- Backdrop -->
         <div 
           (click)="productService.isAdminOpen.set(false)"
-          class="fixed inset-0 bg-stone-900/60 backdrop-blur-md transition-opacity animate-fade-in"
+          class="fixed inset-0 hidden bg-stone-900/60 backdrop-blur-md transition-opacity animate-fade-in sm:block"
         ></div>
 
-        <div class="flex min-h-full items-center justify-center p-4 sm:p-6 lg:p-8">
+        <div class="flex min-h-[100dvh] items-stretch justify-center sm:min-h-full sm:items-center sm:p-6 lg:p-8">
           <div 
-            class="relative w-full max-w-6xl bg-white rounded-3xl shadow-2xl border border-stone-100 overflow-hidden animate-slide-up flex flex-col max-h-[90vh]"
+            class="relative flex min-h-[100dvh] w-full flex-col overflow-hidden bg-white animate-slide-up sm:min-h-0 sm:max-h-[90vh] sm:max-w-6xl sm:rounded-3xl sm:border sm:border-stone-100 sm:shadow-2xl"
           >
             <!-- Top Admin Header -->
-            <div class="p-6 border-b border-stone-200/70 bg-stone-900 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div class="border-b border-stone-200/70 bg-stone-900 p-4 text-white sm:flex sm:items-center sm:justify-between sm:gap-4 sm:p-6">
               <div>
                 <div class="flex items-center gap-2">
                   <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-400 text-stone-950 uppercase tracking-wider">
@@ -45,10 +45,10 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
                 </h2>
               </div>
 
-              <div class="flex flex-wrap items-center gap-2 sm:gap-3">
+              <div class="mt-4 grid w-full grid-cols-2 gap-2 sm:mt-0 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-3">
                 <button
                   (click)="openCreateModal()"
-                  class="px-4 py-2.5 rounded-2xl bg-white text-stone-900 font-bold text-xs hover:bg-stone-100 active:scale-95 shadow-md transition-all flex items-center gap-1.5"
+                  class="col-span-2 flex min-h-11 items-center justify-center gap-1.5 rounded-2xl bg-white px-4 py-2.5 text-sm font-bold text-stone-900 shadow-md transition-all active:scale-95 hover:bg-stone-100 sm:text-xs"
                 >
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -56,28 +56,28 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
                   <span>Nuevo Producto</span>
                 </button>
 
-                <button (click)="isCategoryManagerOpen.update(value => !value)" class="px-4 py-2.5 rounded-2xl bg-stone-800 text-white font-bold text-xs hover:bg-stone-700 transition-all">
+                <button (click)="isCategoryManagerOpen.update(value => !value)" class="min-h-11 rounded-2xl bg-stone-800 px-3 py-2.5 text-sm font-bold text-white transition-all hover:bg-stone-700 sm:px-4 sm:text-xs">
                   Categorías
                 </button>
-                <button (click)="toggleOrders()" class="px-4 py-2.5 rounded-2xl bg-stone-800 text-white font-bold text-xs hover:bg-stone-700 transition-all">
+                <button (click)="toggleOrders()" class="min-h-11 rounded-2xl bg-stone-800 px-3 py-2.5 text-sm font-bold text-white transition-all hover:bg-stone-700 sm:px-4 sm:text-xs">
                   Pedidos
                 </button>
-                <button (click)="toggleContentManager()" class="px-4 py-2.5 rounded-2xl bg-stone-800 text-white font-bold text-xs hover:bg-stone-700 transition-all">
+                <button (click)="toggleContentManager()" class="min-h-11 rounded-2xl bg-stone-800 px-3 py-2.5 text-sm font-bold text-white transition-all hover:bg-stone-700 sm:px-4 sm:text-xs">
                   Inicio
                 </button>
-                <button (click)="toggleThemeManager()" class="px-4 py-2.5 rounded-2xl bg-stone-800 text-white font-bold text-xs hover:bg-stone-700 transition-all">
+                <button (click)="toggleThemeManager()" class="min-h-11 rounded-2xl bg-stone-800 px-3 py-2.5 text-sm font-bold text-white transition-all hover:bg-stone-700 sm:px-4 sm:text-xs">
                   Temas
                 </button>
-                <button (click)="toggleCollectionManager()" class="px-4 py-2.5 rounded-2xl bg-stone-800 text-white font-bold text-xs hover:bg-stone-700 transition-all">
+                <button (click)="toggleCollectionManager()" class="min-h-11 rounded-2xl bg-stone-800 px-3 py-2.5 text-sm font-bold text-white transition-all hover:bg-stone-700 sm:px-4 sm:text-xs">
                   Mini tiendas
                 </button>
-                <button (click)="isAdminManagerOpen.update(value => !value)" class="px-4 py-2.5 rounded-2xl bg-stone-800 text-white font-bold text-xs hover:bg-stone-700 transition-all">
+                <button (click)="isAdminManagerOpen.update(value => !value)" class="min-h-11 rounded-2xl bg-stone-800 px-3 py-2.5 text-sm font-bold text-white transition-all hover:bg-stone-700 sm:px-4 sm:text-xs">
                   Administradores
                 </button>
 
                 <button
                   (click)="onLogout()"
-                  class="px-3 py-2 rounded-xl bg-stone-800 text-stone-300 hover:text-rose-400 hover:bg-stone-700 font-semibold text-xs transition-colors"
+                  class="min-h-11 rounded-xl bg-stone-800 px-3 py-2 text-sm font-semibold text-stone-300 transition-colors hover:bg-stone-700 hover:text-rose-400 sm:text-xs"
                   title="Cerrar sesión de administrador"
                 >
                   Salir
@@ -85,7 +85,7 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
 
                 <button
                   (click)="productService.isAdminOpen.set(false)"
-                  class="p-2 rounded-full bg-stone-800 text-stone-300 hover:text-white hover:bg-stone-700 transition-colors"
+                  class="flex min-h-11 min-w-11 items-center justify-center rounded-full bg-stone-800 text-stone-300 transition-colors hover:bg-stone-700 hover:text-white"
                   aria-label="Cerrar panel admin"
                 >
                   <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -239,13 +239,13 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
               </section>
             }
 
-            <div class="px-6 py-3 border-b border-stone-100 flex items-center justify-between gap-4 bg-white">
+            <div class="flex items-center justify-between gap-3 border-b border-stone-100 bg-white px-4 py-3 sm:px-6">
               <div class="relative flex-1 max-w-sm">
                 <input
                   type="text"
                   [(ngModel)]="adminSearch"
                   placeholder="Filtrar por SKU o nombre..."
-                  class="w-full pl-9 pr-4 py-2 text-xs bg-stone-100 rounded-xl border border-transparent focus:border-stone-300 focus:outline-none"
+                  class="w-full rounded-xl border border-transparent bg-stone-100 py-2.5 pl-9 pr-4 text-sm focus:border-stone-300 focus:outline-none sm:text-xs"
                 />
                 <svg class="w-4 h-4 text-stone-400 absolute left-3 top-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -258,8 +258,34 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
             </div>
 
             <!-- Products Table -->
-            <div class="flex-1 overflow-y-auto p-6">
-              <div class="overflow-x-auto rounded-2xl border border-stone-200/80">
+            <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+              <div class="space-y-3 sm:hidden">
+                @for (product of filteredAdminProducts(); track product.id) {
+                  <article class="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm">
+                    <div class="flex items-start gap-3">
+                      <img [src]="product.images[0]" [alt]="product.name" class="h-14 w-14 shrink-0 rounded-xl bg-stone-100 object-contain p-1" />
+                      <div class="min-w-0 flex-1">
+                        <h3 class="truncate text-sm font-bold text-stone-900">{{ product.name }}</h3>
+                        <p class="mt-0.5 text-xs text-stone-500">{{ product.sku }} · {{ product.category || 'General' }}</p>
+                        <p class="mt-1 font-mono text-sm font-bold text-stone-900">\${{ product.price | number:'1.2-2' }}</p>
+                      </div>
+                    </div>
+                    <div class="mt-4 flex items-center justify-between gap-3 border-t border-stone-100 pt-3">
+                      <div class="flex items-center gap-2" aria-label="Ajustar stock">
+                        <button (click)="productService.adjustStock(product.id, -1)" class="flex h-11 w-11 items-center justify-center rounded-xl bg-stone-100 text-lg font-bold text-stone-700 transition-colors hover:bg-stone-200" [attr.aria-label]="'Reducir stock de ' + product.name">−</button>
+                        <span class="min-w-11 rounded-lg px-2 py-2 text-center font-mono text-sm font-bold" [ngClass]="product.stock <= 5 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-50 text-emerald-800'">{{ product.stock }}</span>
+                        <button (click)="productService.adjustStock(product.id, 1)" class="flex h-11 w-11 items-center justify-center rounded-xl bg-stone-100 text-lg font-bold text-stone-700 transition-colors hover:bg-stone-200" [attr.aria-label]="'Aumentar stock de ' + product.name">+</button>
+                      </div>
+                      <div class="flex gap-2">
+                        <button (click)="openEditModal(product)" class="min-h-11 rounded-xl bg-stone-100 px-3 py-2 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-200">Editar</button>
+                        <button (click)="confirmDelete(product)" class="min-h-11 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-100">Eliminar</button>
+                      </div>
+                    </div>
+                  </article>
+                }
+              </div>
+
+              <div class="hidden overflow-x-auto rounded-2xl border border-stone-200/80 sm:block">
                 <table class="w-full text-left border-collapse text-xs">
                   <thead class="bg-stone-100 text-stone-500 font-bold uppercase tracking-wider">
                     <tr>
@@ -316,7 +342,7 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
                           <div class="flex items-center gap-1.5">
                             <button
                               (click)="productService.adjustStock(product.id, -1)"
-                              class="w-6 h-6 rounded bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold flex items-center justify-center"
+                              class="flex h-11 w-11 items-center justify-center rounded-xl bg-stone-100 font-bold text-stone-700 hover:bg-stone-200"
                               title="Reducir stock"
                             >
                               -
@@ -331,7 +357,7 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
 
                             <button
                               (click)="productService.adjustStock(product.id, 1)"
-                              class="w-6 h-6 rounded bg-stone-100 hover:bg-stone-200 text-stone-700 font-bold flex items-center justify-center"
+                              class="flex h-11 w-11 items-center justify-center rounded-xl bg-stone-100 font-bold text-stone-700 hover:bg-stone-200"
                               title="Aumentar stock"
                             >
                               +
@@ -343,14 +369,14 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
                         <td class="p-3.5 text-right space-x-2">
                           <button
                             (click)="openEditModal(product)"
-                            class="px-2.5 py-1 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-800 font-semibold transition-colors"
+                            class="min-h-11 rounded-xl bg-stone-100 px-3 py-2 font-semibold text-stone-800 transition-colors hover:bg-stone-200"
                           >
                             Editar
                           </button>
 
                           <button
                             (click)="confirmDelete(product)"
-                            class="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold transition-colors"
+                            class="min-h-11 rounded-xl bg-rose-50 px-3 py-2 font-semibold text-rose-700 transition-colors hover:bg-rose-100"
                           >
                             Eliminar
                           </button>
