@@ -42,7 +42,7 @@ import { StorefrontSettingsService } from './services/storefront-settings.servic
             <span>Angular v17+ Standalone & Signals + Supabase Auth Protected</span>
           </div>
 
-          <div class="flex items-center gap-6">
+          <div class="flex flex-wrap items-center justify-center gap-x-6 gap-y-3">
             <a href="#" class="hover:text-stone-900 transition-colors">Términos de servicio</a>
             <a href="#" class="hover:text-stone-900 transition-colors">Privacidad</a>
             <a href="#" class="hover:text-stone-900 transition-colors">Soporte Supabase</a>

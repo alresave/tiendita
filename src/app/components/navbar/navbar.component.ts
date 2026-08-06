@@ -12,15 +12,15 @@ import { AuthService } from '../../services/auth.service';
   imports: [CommonModule, FormsModule],
   template: `
     <header class="sticky top-0 z-40 w-full border-b border-stone-200/80 bg-white/80 backdrop-blur-md transition-all duration-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-4">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-0 sm:h-20 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 sm:gap-4">
         
         <!-- Brand Logo -->
         <div class="flex items-center gap-3">
-          <a href="#" class="group flex items-center gap-2 text-2xl font-extrabold tracking-tight text-stone-900 transition-transform active:scale-95">
+          <a href="#" class="group flex items-center gap-2 text-lg sm:text-2xl font-extrabold tracking-tight text-stone-900 transition-transform active:scale-95 whitespace-nowrap">
             <span class="w-8 h-8 rounded-xl bg-gradient-to-tr from-stone-900 to-stone-700 text-white flex items-center justify-center font-black text-lg shadow-sm group-hover:scale-105 transition-transform duration-300">
               A
             </span>
-            <span class="font-bold tracking-wider">Aidé storefront</span>
+            <span class="hidden sm:inline font-bold tracking-wider">Aidé storefront</span>
             <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
           </a>
 
@@ -39,7 +39,7 @@ import { AuthService } from '../../services/auth.service';
         </div>
 
         <!-- Search Bar -->
-        <div class="flex-1 max-w-md mx-2 sm:mx-6">
+        <div class="order-last basis-full sm:order-none sm:basis-auto flex-1 min-w-0 max-w-none sm:max-w-md sm:mx-6">
           <div class="relative">
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400">
               <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -70,11 +70,11 @@ import { AuthService } from '../../services/auth.service';
         </div>
 
         <!-- Actions: Admin Control & Cart -->
-        <div class="flex items-center gap-2.5">
+        <div class="flex shrink-0 items-center gap-2 sm:gap-2.5">
           <!-- Admin Access Button -->
           <button
             (click)="onAdminClick()"
-            class="flex items-center gap-1.5 px-3.5 py-2.5 rounded-2xl border transition-all active:scale-95 font-semibold text-xs"
+            class="flex items-center gap-1.5 px-3 py-2.5 sm:px-3.5 rounded-2xl border transition-all active:scale-95 font-semibold text-xs"
             [ngClass]="{
               'bg-amber-100/80 border-amber-300/80 text-amber-950 hover:bg-amber-200/80': authService.isAuthenticated(),
               'bg-stone-100 border-stone-200/80 text-stone-800 hover:bg-stone-200/70': !authService.isAuthenticated()
@@ -93,7 +93,7 @@ import { AuthService } from '../../services/auth.service';
           <!-- Cart Action Button -->
           <button
             (click)="cartService.toggleDrawer()"
-            class="relative flex items-center gap-2.5 px-4 py-2.5 rounded-2xl bg-stone-900 hover:bg-stone-800 text-white font-medium text-sm shadow-soft hover:shadow-soft-hover active:scale-95 transition-all duration-200"
+            class="relative flex items-center gap-2 px-3 py-2.5 sm:px-4 rounded-2xl bg-stone-900 hover:bg-stone-800 text-white font-medium text-sm shadow-soft hover:shadow-soft-hover active:scale-95 transition-all duration-200"
             aria-label="Abrir carrito de compras"
           >
             <svg class="w-5 h-5 text-stone-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">

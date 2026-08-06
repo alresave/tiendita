@@ -38,12 +38,12 @@ import { StorefrontCollectionService } from '../../services/storefront-collectio
           <p class="text-xs text-stone-500">Elige un departamento para ver su catálogo.</p>
         </div>
 
-        <div class="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div class="mt-4 grid grid-cols-1 min-[380px]:grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           @for (department of departments(); track department.name) {
           <button
             (click)="productService.selectedCategory.set(department.name)"
             [attr.aria-pressed]="productService.selectedCategory() === department.name"
-            class="group min-h-24 rounded-2xl border p-3 text-left transition-all duration-200 active:scale-[0.98]"
+            class="group min-h-20 sm:min-h-24 rounded-2xl border p-3 text-left transition-all duration-200 active:scale-[0.98]"
             [ngClass]="{
               'border-stone-900 bg-stone-900 text-white shadow-lg': productService.selectedCategory() === department.name,
               'border-stone-200/80 bg-stone-50/50 text-stone-700 hover:border-stone-400 hover:bg-white': productService.selectedCategory() !== department.name
@@ -99,8 +99,8 @@ import { StorefrontCollectionService } from '../../services/storefront-collectio
 
       <!-- Active Search Tag Bar (if searching) -->
       @if (productService.searchQuery() || selectedBrand() || selectedCollectionId()) {
-        <div class="mb-6 flex items-center justify-between bg-stone-100/70 p-3 rounded-2xl border border-stone-200/50">
-          <div class="flex items-center gap-2 text-xs text-stone-600">
+        <div class="mb-6 flex flex-col gap-3 bg-stone-100/70 p-3 rounded-2xl border border-stone-200/50 sm:flex-row sm:items-center sm:justify-between">
+          <div class="flex flex-wrap items-center gap-2 text-xs text-stone-600">
             @if (productService.searchQuery()) {
               <span>Resultados para:</span>
               <span class="font-bold text-stone-900 bg-white px-2.5 py-1 rounded-lg border border-stone-200">

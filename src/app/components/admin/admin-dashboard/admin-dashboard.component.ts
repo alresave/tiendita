@@ -45,7 +45,7 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
                 </h2>
               </div>
 
-              <div class="flex items-center gap-3">
+              <div class="flex flex-wrap items-center gap-2 sm:gap-3">
                 <button
                   (click)="openCreateModal()"
                   class="px-4 py-2.5 rounded-2xl bg-white text-stone-900 font-bold text-xs hover:bg-stone-100 active:scale-95 shadow-md transition-all flex items-center gap-1.5"
