@@ -1,7 +1,7 @@
-// Completa estos valores con la Project URL y la Publishable/anon key de producción.
+// Credenciales públicas del mismo proyecto Supabase usado por la tienda.
 // Nunca uses aquí la service_role key.
 export const environment = {
   production: true,
-  supabaseUrl: 'https://YOUR_SUPABASE_PROJECT_ID.supabase.co',
-  supabaseKey: 'YOUR_SUPABASE_PUBLISHABLE_KEY',
+  supabaseUrl: 'https://arrpcqysxokrokzwucta.supabase.co',
+  supabaseKey: 'sb_publishable_ERV138tTDXXCOswfLr-QGQ_fVWzu4MK',
 };
