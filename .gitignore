@@ -46,11 +46,14 @@ lerna-debug.log*
 
 # Visual Studio Code
 .vscode/*
-!.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
 .history/*
+
+# Local workspace preferences and ad-hoc captures
+.vscode/settings.json
+/Screenshot 2026-08-05 at 9.34.24 a.m..png
 
 # Testing & Coverage
 /coverage
