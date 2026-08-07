@@ -4,17 +4,18 @@ import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { ProductService } from '../../services/product.service';
 import { FocusTrapDirective } from '../../directives/focus-trap.directive';
+import { ToastService } from '../../services/toast.service';
 
 @Component({
   selector: 'app-auth-modal',
   standalone: true,
   imports: [CommonModule, FormsModule, FocusTrapDirective],
   template: `
-    @if (authService.isAuthModalOpen()) {
+    @if (authService.isAuthModalOpen() || authService.isPasswordSetupOpen()) {
       <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="auth-modal-title" role="dialog" aria-modal="true">
         <!-- Backdrop -->
         <div 
-          (click)="authService.isAuthModalOpen.set(false)"
+          (click)="close()"
           class="fixed inset-0 bg-stone-900/65 backdrop-blur-sm transition-opacity animate-fade-in"
         ></div>
 
@@ -25,7 +26,7 @@ import { FocusTrapDirective } from '../../directives/focus-trap.directive';
           >
             <!-- Close Button -->
             <button
-              (click)="authService.isAuthModalOpen.set(false)"
+              (click)="close()"
               class="absolute top-4 right-4 p-2 rounded-full text-stone-400 hover:text-stone-600 hover:bg-stone-100 transition-colors"
               aria-label="Cerrar modal"
             >
@@ -41,14 +42,24 @@ import { FocusTrapDirective } from '../../directives/focus-trap.directive';
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              <h3 class="text-2xl font-black text-stone-900 tracking-tight">Acceso Administrador</h3>
+              <h3 class="text-2xl font-black text-stone-900 tracking-tight">{{ authService.isPasswordSetupOpen() ? 'Crea tu contraseña' : 'Acceso Administrador' }}</h3>
               <p class="text-xs text-stone-500 mt-1 leading-relaxed">
-                Ingresa con tu cuenta de Supabase Auth para gestionar el catálogo e inventario.
+                {{ authService.isPasswordSetupOpen() ? 'Elige una contraseña para activar tu acceso de administrador.' : 'Ingresa con tu cuenta de Supabase Auth para gestionar el catálogo e inventario.' }}
               </p>
             </div>
 
             <!-- Login Form -->
-            <form (ngSubmit)="onLogin()" class="space-y-4">
+            <form (ngSubmit)="onSubmit()" class="space-y-4">
+              @if (authService.isPasswordSetupOpen()) {
+                <div>
+                  <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">Nueva contraseña</label>
+                  <input type="password" [(ngModel)]="newPassword" name="newPassword" required minlength="8" autocomplete="new-password" placeholder="Mínimo 8 caracteres" class="w-full px-4 py-3 text-sm bg-stone-50 rounded-2xl border border-stone-200 focus:bg-white focus:ring-2 focus:ring-stone-900 focus:outline-none transition-all" />
+                </div>
+                <div>
+                  <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">Confirmar contraseña</label>
+                  <input type="password" [(ngModel)]="confirmPassword" name="confirmPassword" required minlength="8" autocomplete="new-password" placeholder="Repite tu contraseña" class="w-full px-4 py-3 text-sm bg-stone-50 rounded-2xl border border-stone-200 focus:bg-white focus:ring-2 focus:ring-stone-900 focus:outline-none transition-all" />
+                </div>
+              } @else {
               <div>
                 <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">
                   Correo Electrónico
@@ -94,6 +105,7 @@ import { FocusTrapDirective } from '../../directives/focus-trap.directive';
                   </button>
                 </div>
               </div>
+              }
 
               <!-- Primary Submit Button -->
               <button
@@ -107,13 +119,15 @@ import { FocusTrapDirective } from '../../directives/focus-trap.directive';
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                   </svg>
                 }
-                <span>Iniciar Sesión</span>
+                <span>{{ authService.isPasswordSetupOpen() ? 'Guardar contraseña' : 'Iniciar Sesión' }}</span>
               </button>
             </form>
 
+            @if (!authService.isPasswordSetupOpen()) {
             <button type="button" (click)="onPasswordReset()" class="w-full mt-4 text-xs font-semibold text-stone-500 hover:text-stone-900">
               ¿Olvidaste tu contraseña?
             </button>
+            }
 
           </div>
         </div>
@@ -124,14 +138,35 @@ import { FocusTrapDirective } from '../../directives/focus-trap.directive';
 export class AuthModalComponent {
   public authService = inject(AuthService);
   private productService = inject(ProductService);
+  private toastService = inject(ToastService);
 
   public email = '';
   public password = '';
+  public newPassword = '';
+  public confirmPassword = '';
   public showPassword = signal<boolean>(false);
 
   @HostListener('document:keydown.escape')
   public closeOnEscape(): void {
-    if (this.authService.isAuthModalOpen()) this.authService.isAuthModalOpen.set(false);
+    this.close();
+  }
+
+  public close(): void {
+    this.authService.isAuthModalOpen.set(false);
+    this.authService.isPasswordSetupOpen.set(false);
+  }
+
+  public async onSubmit(): Promise<void> {
+    if (this.authService.isPasswordSetupOpen()) {
+      if (this.newPassword !== this.confirmPassword) {
+        this.toastService.error('Las contraseñas no coinciden', 'Revísalas e inténtalo de nuevo.');
+        return;
+      }
+      const success = await this.authService.setPassword(this.newPassword);
+      if (success) this.productService.isAdminOpen.set(true);
+      return;
+    }
+    await this.onLogin();
   }
 
   public async onLogin(): Promise<void> {

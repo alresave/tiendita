@@ -65,7 +65,7 @@ import { ToastService } from './services/toast.service';
       @defer (when productService.isAdminOpen()) {
         <app-admin-dashboard></app-admin-dashboard>
       }
-      @defer (when authService.isAuthModalOpen()) {
+      @defer (when authService.isAuthModalOpen() || authService.isPasswordSetupOpen()) {
         <app-auth-modal></app-auth-modal>
       }
       @defer (when toastService.toasts().length > 0) {

@@ -69,3 +69,5 @@ __screenshots__/
 .Trashes
 ehthumbs.db
 Thumbs.db
+.vercel
+.env*

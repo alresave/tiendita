@@ -18,7 +18,9 @@ export class AuthService {
   // Signals de estado de usuario
   public currentUser = signal<UserSession | null>(null);
   public isAuthModalOpen = signal<boolean>(false);
+  public isPasswordSetupOpen = signal<boolean>(false);
   public isLoading = signal<boolean>(false);
+  private readonly invitationLinkDetected = this.getAuthFlowType() === 'invite';
 
   // Signal computado para verificar autenticación
   public isAuthenticated = computed(() => this.currentUser() !== null);
@@ -36,10 +38,21 @@ export class AuthService {
     client.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
         await this.loadAdminSession(session.user.id, session.user.email || '');
+        if (event === 'PASSWORD_RECOVERY' || this.invitationLinkDetected) {
+          this.isAuthModalOpen.set(false);
+          this.isPasswordSetupOpen.set(true);
+        }
       } else if (event === 'SIGNED_OUT') {
         this.currentUser.set(null);
+        this.isPasswordSetupOpen.set(false);
       }
     });
+  }
+
+  private getAuthFlowType(): string | null {
+    if (typeof window === 'undefined') return null;
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+    return hash.get('type') ?? new URLSearchParams(window.location.search).get('type');
   }
 
   public async loginWithEmail(email: string, pass: string): Promise<boolean> {
@@ -82,6 +95,7 @@ export class AuthService {
     }
 
     this.currentUser.set(null);
+    this.isPasswordSetupOpen.set(false);
     this.toastService.info('Sesión Cerrada', 'Has salido del panel de administración.');
   }
 
@@ -95,6 +109,25 @@ export class AuthService {
     });
     if (error) this.toastService.error('No se pudo enviar el correo', error.message);
     else this.toastService.success('Revisa tu correo', 'Te enviamos un enlace para restablecer tu contraseña.');
+  }
+
+  public async setPassword(password: string): Promise<boolean> {
+    if (!this.supabaseService.isReady || password.length < 8) {
+      this.toastService.error('Contraseña no válida', 'Usa al menos 8 caracteres.');
+      return false;
+    }
+    this.isLoading.set(true);
+    const client = this.supabaseService.clientInstance!;
+    const { data, error } = await client.auth.updateUser({ password });
+    this.isLoading.set(false);
+    if (error || !data.user) {
+      this.toastService.error('No se pudo guardar la contraseña', error?.message);
+      return false;
+    }
+    await this.loadAdminSession(data.user.id, data.user.email || '');
+    this.isPasswordSetupOpen.set(false);
+    this.toastService.success('Contraseña creada', 'Tu acceso de administrador está listo.');
+    return true;
   }
 
   public async inviteAdmin(email: string): Promise<boolean> {
