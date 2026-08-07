@@ -102,15 +102,31 @@ export class AuthService {
       this.toastService.error('No se pudo invitar', 'Indica un correo válido y configura Supabase.');
       return false;
     }
-    const { error } = await this.supabaseService.clientInstance!.functions.invoke('invite-admin', {
+    const { data, error } = await this.supabaseService.clientInstance!.functions.invoke('invite-admin', {
       body: { email: email.trim(), redirectTo: window.location.origin },
     });
     if (error) {
-      this.toastService.error('No se pudo invitar', error.message);
+      this.toastService.error('No se pudo invitar', await this.getFunctionError(error));
       return false;
     }
-    this.toastService.success('Invitación enviada', `${email.trim()} podrá crear su contraseña y entrar como administrador.`);
+    const message = data?.mode === 'existing'
+      ? `${email.trim()} ya tenía una cuenta: se le asignó el rol y enviamos un enlace para definir su contraseña.`
+      : `${email.trim()} podrá crear su contraseña y entrar como administrador.`;
+    this.toastService.success('Invitación enviada', message);
     return true;
+  }
+
+  private async getFunctionError(error: unknown): Promise<string> {
+    const context = (error as { context?: unknown })?.context;
+    if (context instanceof Response) {
+      try {
+        const body = await context.clone().json() as { error?: string };
+        if (body.error) return body.error;
+      } catch {
+        // Se conserva el mensaje genérico si la respuesta no es JSON.
+      }
+    }
+    return error instanceof Error ? error.message : 'No se pudo completar la invitación.';
   }
 
   private async loadAdminSession(userId: string, email: string): Promise<boolean> {
