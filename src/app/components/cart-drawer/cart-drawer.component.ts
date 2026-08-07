@@ -1,11 +1,12 @@
-import { Component, inject } from '@angular/core';
+import { Component, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CartService } from '../../services/cart.service';
+import { FocusTrapDirective } from '../../directives/focus-trap.directive';
 
 @Component({
   selector: 'app-cart-drawer',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FocusTrapDirective],
   template: `
     @if (cartService.isDrawerOpen()) {
       <div class="fixed inset-0 z-50 overflow-hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
@@ -17,7 +18,7 @@ import { CartService } from '../../services/cart.service';
 
         <div class="fixed inset-y-0 right-0 flex max-w-full pl-0 sm:pl-10">
           <!-- Slide Panel Container -->
-          <div 
+          <div appFocusTrap
             class="w-screen max-w-md bg-white shadow-2xl flex flex-col justify-between transform transition-transform duration-300 ease-in-out animate-slide-left border-l border-stone-100"
           >
             <!-- Drawer Header -->
@@ -204,6 +205,11 @@ import { CartService } from '../../services/cart.service';
 })
 export class CartDrawerComponent {
   public cartService = inject(CartService);
+
+  @HostListener('document:keydown.escape')
+  public closeOnEscape(): void {
+    if (this.cartService.isDrawerOpen()) this.cartService.closeDrawer();
+  }
 
   public async onCheckout(): Promise<void> {
     const success = await this.cartService.checkoutWithEdgeFunction();

@@ -1,12 +1,13 @@
-import { Component, Input, Output, EventEmitter, inject } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Product } from '../../models/product.model';
 import { CartService } from '../../services/cart.service';
+import { FocusTrapDirective } from '../../directives/focus-trap.directive';
 
 @Component({
   selector: 'app-product-detail-modal',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FocusTrapDirective],
   template: `
     @if (product) {
       <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
@@ -18,7 +19,7 @@ import { CartService } from '../../services/cart.service';
 
         <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-6">
           <!-- Modal Card -->
-          <div 
+          <div appFocusTrap
             class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-stone-100 animate-slide-up"
           >
             <!-- Close Button -->
@@ -133,6 +134,11 @@ export class ProductDetailModalComponent {
 
   public activeImage: string | null = null;
   private cartService = inject(CartService);
+
+  @HostListener('document:keydown.escape')
+  public closeOnEscape(): void {
+    if (this.product) this.close.emit();
+  }
 
   public getSpecsEntries(specs: any): { key: string; value: any }[] {
     if (!specs) return [];

@@ -1,5 +1,6 @@
 import { Component, inject, computed, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
 import { ProductCardComponent } from '../product-card/product-card.component';
 import { ProductDetailModalComponent } from '../product-detail-modal/product-detail-modal.component';
@@ -11,7 +12,7 @@ import { StorefrontCollectionService } from '../../services/storefront-collectio
 @Component({
   selector: 'app-product-grid',
   standalone: true,
-  imports: [CommonModule, ProductCardComponent, ProductDetailModalComponent],
+  imports: [CommonModule, FormsModule, ProductCardComponent, ProductDetailModalComponent],
   template: `
     <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       
@@ -41,7 +42,7 @@ import { StorefrontCollectionService } from '../../services/storefront-collectio
         <div class="mt-4 grid grid-cols-1 min-[380px]:grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           @for (department of departments(); track department.name) {
           <button
-            (click)="productService.selectedCategory.set(department.name)"
+            (click)="selectCategory(department.name)"
             [attr.aria-pressed]="productService.selectedCategory() === department.name"
             class="group min-h-20 sm:min-h-24 rounded-2xl border p-3 text-left transition-all duration-200 active:scale-[0.98]"
             [ngClass]="{
@@ -125,6 +126,34 @@ import { StorefrontCollectionService } from '../../services/storefront-collectio
         </div>
       }
 
+      <section class="mb-6 rounded-3xl border border-stone-200/80 bg-white p-4 shadow-sm sm:p-5" aria-labelledby="catalog-filters-title">
+        <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 id="catalog-filters-title" class="text-base font-black text-stone-900">Filtrar y ordenar</h2>
+            <p class="mt-1 text-xs text-stone-500">{{ filteredProducts().length }} productos encontrados.</p>
+          </div>
+          <button (click)="resetCatalogControls()" class="min-h-11 text-sm font-semibold text-stone-500 transition-colors hover:text-stone-900">Restablecer</button>
+        </div>
+        <div class="mt-4 grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 lg:grid-cols-5">
+          <label class="text-xs font-semibold text-stone-600">Precio mínimo
+            <input type="number" min="0" [(ngModel)]="minPrice" (ngModelChange)="resetPage()" placeholder="$0" class="mt-1 h-11 w-full rounded-xl border border-stone-200 bg-stone-50 px-3 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900" />
+          </label>
+          <label class="text-xs font-semibold text-stone-600">Precio máximo
+            <input type="number" min="0" [(ngModel)]="maxPrice" (ngModelChange)="resetPage()" placeholder="Sin límite" class="mt-1 h-11 w-full rounded-xl border border-stone-200 bg-stone-50 px-3 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900" />
+          </label>
+          <label class="text-xs font-semibold text-stone-600">Disponibilidad
+            <select [(ngModel)]="availability" (ngModelChange)="resetPage()" class="mt-1 h-11 w-full rounded-xl border border-stone-200 bg-stone-50 px-3 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900">
+              <option value="all">Todo el catálogo</option><option value="in-stock">Disponible</option><option value="out-of-stock">Agotado</option>
+            </select>
+          </label>
+          <label class="text-xs font-semibold text-stone-600 lg:col-span-2">Ordenar por
+            <select [(ngModel)]="sortBy" (ngModelChange)="resetPage()" class="mt-1 h-11 w-full rounded-xl border border-stone-200 bg-stone-50 px-3 text-sm text-stone-900 focus:outline-none focus:ring-2 focus:ring-stone-900">
+              <option value="featured">Destacados</option><option value="price-asc">Precio: menor a mayor</option><option value="price-desc">Precio: mayor a menor</option><option value="name">Nombre: A–Z</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
       <!-- Grid Content -->
       @if (productService.isLoading()) {
         <!-- Skeletons State -->
@@ -167,13 +196,20 @@ import { StorefrontCollectionService } from '../../services/storefront-collectio
       } @else {
         <!-- Product Grid -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          @for (product of filteredProducts(); track product.id) {
+          @for (product of pagedProducts(); track product.id) {
             <app-product-card
               [product]="product"
               (openDetail)="selectedProductModal.set($event)"
             ></app-product-card>
           }
         </div>
+        @if (totalPages() > 1) {
+          <nav class="mt-8 flex items-center justify-center gap-3" aria-label="Paginación del catálogo">
+            <button (click)="goToPage(displayPage() - 1)" [disabled]="displayPage() === 1" class="min-h-11 rounded-xl border border-stone-200 bg-white px-4 text-sm font-semibold text-stone-700 disabled:cursor-not-allowed disabled:opacity-40">Anterior</button>
+            <span class="text-sm font-semibold text-stone-600">Página {{ displayPage() }} de {{ totalPages() }}</span>
+            <button (click)="goToPage(displayPage() + 1)" [disabled]="displayPage() === totalPages()" class="min-h-11 rounded-xl border border-stone-200 bg-white px-4 text-sm font-semibold text-stone-700 disabled:cursor-not-allowed disabled:opacity-40">Siguiente</button>
+          </nav>
+        }
       }
 
       <!-- Detail Modal -->
@@ -194,6 +230,12 @@ export class ProductGridComponent {
   public selectedProductModal = signal<Product | null>(null);
   public selectedBrand = signal<string | null>(null);
   public selectedCollectionId = signal<string | null>(null);
+  public minPrice: number | null = null;
+  public maxPrice: number | null = null;
+  public availability: 'all' | 'in-stock' | 'out-of-stock' = 'all';
+  public sortBy: 'featured' | 'price-asc' | 'price-desc' | 'name' = 'featured';
+  public currentPage = signal(1);
+  public readonly pageSize = 12;
 
   constructor() {
     void this.storefrontSettings.load();
@@ -252,8 +294,26 @@ export class ProductGridComponent {
       const matchesBrand = !brand || p.brand?.toLowerCase() === brand;
       const matchesCollection = !collection || collection.productIds.includes(p.id);
 
-      return matchesCategory && matchesQuery && matchesBrand && matchesCollection;
+      const matchesMinimum = this.minPrice === null || this.minPrice === undefined || p.price >= this.minPrice;
+      const matchesMaximum = this.maxPrice === null || this.maxPrice === undefined || p.price <= this.maxPrice;
+      const matchesAvailability = this.availability === 'all' || (this.availability === 'in-stock' ? p.stock > 0 : p.stock <= 0);
+      return matchesCategory && matchesQuery && matchesBrand && matchesCollection && matchesMinimum && matchesMaximum && matchesAvailability;
     });
+  });
+
+  public sortedProducts = computed(() => {
+    const products = [...this.filteredProducts()];
+    if (this.sortBy === 'price-asc') return products.sort((a, b) => a.price - b.price);
+    if (this.sortBy === 'price-desc') return products.sort((a, b) => b.price - a.price);
+    if (this.sortBy === 'name') return products.sort((a, b) => a.name.localeCompare(b.name, 'es'));
+    return products;
+  });
+
+  public totalPages = computed(() => Math.max(1, Math.ceil(this.sortedProducts().length / this.pageSize)));
+  public displayPage = computed(() => Math.min(this.currentPage(), this.totalPages()));
+  public pagedProducts = computed(() => {
+    const start = (this.displayPage() - 1) * this.pageSize;
+    return this.sortedProducts().slice(start, start + this.pageSize);
   });
 
   public resetFilters(): void {
@@ -261,17 +321,32 @@ export class ProductGridComponent {
     this.productService.selectedCategory.set('Todos');
     this.selectedBrand.set(null);
     this.selectedCollectionId.set(null);
+    this.resetCatalogControls();
   }
+
+  public resetCatalogControls(): void {
+    this.minPrice = null;
+    this.maxPrice = null;
+    this.availability = 'all';
+    this.sortBy = 'featured';
+    this.resetPage();
+  }
+
+  public resetPage(): void { this.currentPage.set(1); }
+  public goToPage(page: number): void { this.currentPage.set(Math.max(1, Math.min(page, this.totalPages()))); }
+  public selectCategory(category: string): void { this.productService.selectedCategory.set(category); this.resetPage(); }
 
   public selectBrandStore(brand: string): void {
     this.selectedBrand.set(this.selectedBrand() === brand ? null : brand);
     this.productService.selectedCategory.set('Todos');
     this.selectedCollectionId.set(null);
+    this.resetPage();
   }
 
   public selectCollection(collectionId: string): void {
     this.selectedCollectionId.set(this.selectedCollectionId() === collectionId ? null : collectionId);
     this.selectedBrand.set(null);
     this.productService.selectedCategory.set('Todos');
+    this.resetPage();
   }
 }

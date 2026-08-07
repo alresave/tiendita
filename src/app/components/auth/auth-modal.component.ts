@@ -1,13 +1,14 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, HostListener, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import { ProductService } from '../../services/product.service';
+import { FocusTrapDirective } from '../../directives/focus-trap.directive';
 
 @Component({
   selector: 'app-auth-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FocusTrapDirective],
   template: `
     @if (authService.isAuthModalOpen()) {
       <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="auth-modal-title" role="dialog" aria-modal="true">
@@ -19,7 +20,7 @@ import { ProductService } from '../../services/product.service';
 
         <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-6">
           <!-- Auth Card -->
-          <div 
+          <div appFocusTrap
             class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-md border border-stone-100 animate-slide-up p-6 sm:p-8"
           >
             <!-- Close Button -->
@@ -127,6 +128,11 @@ export class AuthModalComponent {
   public email = '';
   public password = '';
   public showPassword = signal<boolean>(false);
+
+  @HostListener('document:keydown.escape')
+  public closeOnEscape(): void {
+    if (this.authService.isAuthModalOpen()) this.authService.isAuthModalOpen.set(false);
+  }
 
   public async onLogin(): Promise<void> {
     if (!this.email || !this.password) return;

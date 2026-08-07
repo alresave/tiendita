@@ -1,4 +1,4 @@
-import { Component, inject, signal, computed } from '@angular/core';
+import { Component, HostListener, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProductService } from '../../../services/product.service';
@@ -11,13 +11,14 @@ import { StorefrontSettingsService } from '../../../services/storefront-settings
 import { STOREFRONT_THEMES, StorefrontSettings, StorefrontTheme } from '../../../models/storefront-settings.model';
 import { StorefrontCollectionService } from '../../../services/storefront-collection.service';
 import { StorefrontCollection } from '../../../models/storefront-collection.model';
+import { FocusTrapDirective } from '../../../directives/focus-trap.directive';
 
 type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 'collections' | 'administrators';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProductFormComponent],
+  imports: [CommonModule, FormsModule, ProductFormComponent, FocusTrapDirective],
   template: `
     @if (productService.isAdminOpen() && authService.isAuthenticated()) {
       <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="admin-title" role="dialog" aria-modal="true">
@@ -28,7 +29,7 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
         ></div>
 
         <div class="flex min-h-[100dvh] items-stretch justify-center sm:min-h-full sm:items-center sm:p-6 lg:p-8">
-          <div id="admin-content"
+          <div appFocusTrap id="admin-content"
             class="relative flex h-[100dvh] w-full flex-col overflow-y-auto bg-white animate-slide-up sm:h-auto sm:min-h-0 sm:max-h-[90vh] sm:max-w-6xl sm:overflow-hidden sm:rounded-3xl sm:border sm:border-stone-100 sm:shadow-2xl"
           >
             <!-- Top Admin Header -->
@@ -59,26 +60,26 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
                 </button>
 
                 <button (click)="selectView('inventory')" [attr.aria-current]="activeView() === 'inventory' ? 'page' : null" [ngClass]="activeView() === 'inventory' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
-                  Productos
+                  <span aria-hidden="true">▦</span> Productos
                 </button>
 
                 <button (click)="selectView('categories')" [attr.aria-current]="activeView() === 'categories' ? 'page' : null" [ngClass]="activeView() === 'categories' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
-                  Categorías
+                  <span aria-hidden="true">⌘</span> Categorías
                 </button>
                 <button (click)="selectView('orders')" [attr.aria-current]="activeView() === 'orders' ? 'page' : null" [ngClass]="activeView() === 'orders' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
-                  Pedidos
+                  <span aria-hidden="true">□</span> Pedidos
                 </button>
                 <button (click)="selectView('content')" [attr.aria-current]="activeView() === 'content' ? 'page' : null" [ngClass]="activeView() === 'content' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
-                  Inicio
+                  <span aria-hidden="true">⌂</span> Inicio
                 </button>
                 <button (click)="selectView('themes')" [attr.aria-current]="activeView() === 'themes' ? 'page' : null" [ngClass]="activeView() === 'themes' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
-                  Temas
+                  <span aria-hidden="true">◐</span> Temas
                 </button>
                 <button (click)="selectView('collections')" [attr.aria-current]="activeView() === 'collections' ? 'page' : null" [ngClass]="activeView() === 'collections' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
-                  Mini tiendas
+                  <span aria-hidden="true">◇</span> Mini tiendas
                 </button>
                 <button (click)="selectView('administrators')" [attr.aria-current]="activeView() === 'administrators' ? 'page' : null" [ngClass]="activeView() === 'administrators' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
-                  Administradores
+                  <span aria-hidden="true">♙</span> Administradores
                 </button>
 
                 <button
@@ -416,7 +417,7 @@ export class AdminDashboardComponent {
   public storefrontSettingsService = inject(StorefrontSettingsService);
   public collectionService = inject(StorefrontCollectionService);
 
-  public activeView = signal<AdminView>('inventory');
+  public activeView = signal<AdminView>(this.getSavedView());
 
   public adminSearch = '';
   public isFormModalOpen = signal<boolean>(false);
@@ -437,8 +438,26 @@ export class AdminDashboardComponent {
   public newCollectionDescription = '';
   public selectedCollectionForEditId: string | null = null;
 
+  private getSavedView(): AdminView {
+    if (typeof localStorage === 'undefined') return 'inventory';
+    const value = localStorage.getItem('tiendita.admin-view');
+    return ['inventory', 'categories', 'orders', 'content', 'themes', 'collections', 'administrators'].includes(value ?? '')
+      ? value as AdminView
+      : 'inventory';
+  }
+
+  @HostListener('document:keydown.escape')
+  public closeOnEscape(): void {
+    if (this.isFormModalOpen()) {
+      this.closeFormModal();
+    } else if (this.productService.isAdminOpen()) {
+      this.productService.isAdminOpen.set(false);
+    }
+  }
+
   public selectView(view: AdminView): void {
     this.activeView.set(view);
+    localStorage.setItem('tiendita.admin-view', view);
 
     if (view === 'content') this.storefrontDraft = { ...this.storefrontSettingsService.settings() };
     if (view === 'themes') this.themeDraft = this.storefrontSettingsService.settings().theme;

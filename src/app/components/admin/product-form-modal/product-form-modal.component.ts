@@ -1,10 +1,11 @@
-import { Component, Input, Output, EventEmitter, inject, OnInit, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, HostListener, inject, OnInit, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Product, ProductSpecs } from '../../../models/product.model';
 import { ProductService } from '../../../services/product.service';
 import { CategoryService } from '../../../services/category.service';
 import { SupabaseService } from '../../../services/supabase.service';
+import { FocusTrapDirective } from '../../../directives/focus-trap.directive';
 
 interface SpecRow {
   key: string;
@@ -14,7 +15,7 @@ interface SpecRow {
 @Component({
   selector: 'app-product-form-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, FocusTrapDirective],
   template: `
     @if (isOpen) {
       <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
@@ -25,7 +26,7 @@ interface SpecRow {
         ></div>
 
         <div class="flex min-h-[100dvh] items-stretch justify-center text-center sm:min-h-full sm:items-center sm:p-6">
-          <div 
+          <div appFocusTrap
             class="relative min-h-[100dvh] w-full transform overflow-hidden bg-white p-4 text-left transition-all animate-slide-up sm:my-8 sm:min-h-0 sm:max-w-2xl sm:rounded-3xl sm:border sm:border-stone-100 sm:p-8 sm:shadow-2xl"
           >
             <!-- Header -->
@@ -314,6 +315,14 @@ export class ProductFormComponent implements OnInit {
 
   public imageUrls: string[] = ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=80'];
   public specRows: SpecRow[] = [{ key: 'color', value: 'Matte Black' }];
+
+  @HostListener('document:keydown.escape', ['$event'])
+  public closeOnEscape(event: Event): void {
+    if (this.isOpen) {
+      event.stopImmediatePropagation();
+      this.close.emit();
+    }
+  }
 
   ngOnInit(): void {
     const prod = this.productToEdit;
