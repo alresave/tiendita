@@ -12,13 +12,23 @@
 - [x] Mejorar la adaptación móvil de navegación, departamentos, filtros, panel admin, pie y notificaciones.
 - [x] Validar los cambios con chequeo de tipos, pruebas unitarias y build de producción.
 
+## Entregado — 7 de agosto de 2026
+
+- [x] Convertir las secciones del panel admin en vistas de trabajo completas para móvil, con navegación horizontal y vista activa persistente.
+- [x] Adaptar el inventario administrativo a tarjetas móviles con controles táctiles de 44 px.
+- [x] Añadir filtros de precio y disponibilidad, ordenamiento y paginación al catálogo.
+- [x] Mejorar accesibilidad con foco visible, foco atrapado en capas y cierre con `Escape`.
+- [x] Corregir invitaciones de administradores: CORS de producción, mensajes de error detallados y soporte para cuentas existentes.
+- [x] Permitir que personas invitadas creen o restablezcan su contraseña desde la tienda.
+- [x] Configurar la URL pública de Auth en Supabase y desplegar los cambios en `https://tiendita-aide.vercel.app`.
+
 ## Validar antes de desplegar
 
 - [ ] Crear una categoría y un producto con imagen subida a Supabase Storage.
 - [ ] Probar el carrito desde una ventana de incógnito.
 - [ ] Confirmar un checkout y verificar pedido, stock, carrito y correo al administrador.
 - [ ] Probar el acceso con un usuario que no tenga el rol `admin`.
-- [ ] Desplegar un preview en Vercel y probar el checkout desde `*.vercel.app`.
+- [ ] Probar el checkout desde el sitio de producción publicado en Vercel.
 - [ ] Validar visualmente la tienda publicada en móvil (320 px, 375 px y 768 px).
 
 ## Próxima entrega: checkout y pedidos
@@ -32,7 +42,7 @@
 
 - [ ] Crear perfil de cliente y gestión de direcciones guardadas.
 - [ ] Añadir historial de pedidos para clientes autenticados.
-- [ ] Completar la pantalla de cambio de contraseña al volver desde el correo de recuperación.
+- [x] Completar la pantalla de creación y cambio de contraseña al volver desde invitación o recuperación.
 
 ## Catálogo e inventario
 
