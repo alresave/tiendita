@@ -103,7 +103,7 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
             </div>
 
             <!-- Stats Bar -->
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 p-6 bg-stone-50 border-b border-stone-100">
+            <div [ngClass]="activeView() === 'inventory' ? 'grid' : 'hidden sm:grid'" class="grid-cols-1 gap-4 border-b border-stone-100 bg-stone-50 p-4 sm:grid-cols-3 sm:p-6">
               <div class="bg-white p-4 rounded-2xl border border-stone-200/70 shadow-sm">
                 <span class="text-xs font-bold text-stone-400 uppercase tracking-wider block mb-1">Total Catálogo</span>
                 <span class="text-2xl font-black text-stone-900">{{ productService.totalProductsCount() }} productos</span>
@@ -126,7 +126,7 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
 
             <!-- Filter & Search Subheader -->
             @if (activeView() === 'categories') {
-              <section class="p-6 border-b border-stone-100 bg-stone-50">
+              <section class="min-h-full flex-1 bg-stone-50 p-4 sm:min-h-0 sm:flex-none sm:border-b sm:border-stone-100 sm:p-6">
                 <div class="flex flex-col sm:flex-row gap-3 sm:items-end sm:justify-between">
                   <div class="flex-1">
                     <label class="block text-xs font-bold text-stone-600 uppercase tracking-wider mb-1.5">Nueva categoría</label>
@@ -150,7 +150,7 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
             }
 
             @if (activeView() === 'orders') {
-              <section class="p-6 border-b border-stone-100 bg-stone-50">
+              <section class="min-h-full flex-1 bg-stone-50 p-4 sm:min-h-0 sm:flex-none sm:border-b sm:border-stone-100 sm:p-6">
                 <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-stone-900">Pedidos recientes</h3><button (click)="orderService.load()" class="text-xs font-semibold text-stone-600">Actualizar</button></div>
                 @if (orderService.orders().length === 0) {
                   <p class="text-xs text-stone-500">Aún no hay pedidos.</p>
@@ -172,7 +172,7 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
             }
 
             @if (activeView() === 'content') {
-              <section class="p-6 border-b border-stone-100 bg-stone-50">
+              <section class="min-h-full flex-1 bg-stone-50 p-4 sm:min-h-0 sm:flex-none sm:border-b sm:border-stone-100 sm:p-6">
                 <div class="flex items-center justify-between gap-3 mb-4">
                   <div><h3 class="font-bold text-stone-900">Contenido de inicio</h3><p class="text-xs text-stone-500 mt-1">Edita los mensajes visibles en la página principal.</p></div>
                   <button (click)="saveStorefrontContent()" class="px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold">Guardar cambios</button>
@@ -189,7 +189,7 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
             }
 
             @if (activeView() === 'themes') {
-              <section class="p-6 border-b border-stone-100 bg-stone-50">
+              <section class="min-h-full flex-1 bg-stone-50 p-4 sm:min-h-0 sm:flex-none sm:border-b sm:border-stone-100 sm:p-6">
                 <div class="flex items-center justify-between gap-3 mb-4">
                   <div><h3 class="font-bold text-stone-900">Apariencia de la tienda</h3><p class="text-xs text-stone-500 mt-1">El tema elegido se publica para todos los visitantes.</p></div>
                   <button (click)="saveTheme()" class="px-4 py-2 rounded-xl bg-stone-900 text-white text-xs font-bold">Guardar tema</button>
@@ -207,7 +207,7 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
             }
 
             @if (activeView() === 'collections') {
-              <section class="p-6 border-b border-stone-100 bg-stone-50">
+              <section class="min-h-full flex-1 bg-stone-50 p-4 sm:min-h-0 sm:flex-none sm:border-b sm:border-stone-100 sm:p-6">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
                   <label class="flex-1 text-xs font-semibold text-stone-600">Nombre de la mini tienda<input [(ngModel)]="newCollectionName" class="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 font-normal" placeholder="Ej. Regalos para oficina" /></label>
                   <label class="flex-1 text-xs font-semibold text-stone-600">Descripción (opcional)<input [(ngModel)]="newCollectionDescription" class="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 font-normal" placeholder="Una selección especial" /></label>
@@ -236,7 +236,7 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
             }
 
             @if (activeView() === 'administrators') {
-              <section class="p-6 border-b border-stone-100 bg-stone-50">
+              <section class="min-h-full flex-1 bg-stone-50 p-4 sm:min-h-0 sm:flex-none sm:border-b sm:border-stone-100 sm:p-6">
                 <h3 class="font-bold text-stone-900">Agregar administrador</h3>
                 <p class="text-xs text-stone-500 mt-1 mb-3">Enviaremos una invitación para que esta persona cree su contraseña y acceda al panel.</p>
                 <div class="flex flex-col sm:flex-row gap-2 max-w-xl">
