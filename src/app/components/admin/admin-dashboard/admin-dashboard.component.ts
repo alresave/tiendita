@@ -12,6 +12,8 @@ import { STOREFRONT_THEMES, StorefrontSettings, StorefrontTheme } from '../../..
 import { StorefrontCollectionService } from '../../../services/storefront-collection.service';
 import { StorefrontCollection } from '../../../models/storefront-collection.model';
 
+type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 'collections' | 'administrators';
+
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
@@ -26,11 +28,11 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
         ></div>
 
         <div class="flex min-h-[100dvh] items-stretch justify-center sm:min-h-full sm:items-center sm:p-6 lg:p-8">
-          <div 
-            class="relative flex min-h-[100dvh] w-full flex-col overflow-hidden bg-white animate-slide-up sm:min-h-0 sm:max-h-[90vh] sm:max-w-6xl sm:rounded-3xl sm:border sm:border-stone-100 sm:shadow-2xl"
+          <div id="admin-content"
+            class="relative flex h-[100dvh] w-full flex-col overflow-y-auto bg-white animate-slide-up sm:h-auto sm:min-h-0 sm:max-h-[90vh] sm:max-w-6xl sm:overflow-hidden sm:rounded-3xl sm:border sm:border-stone-100 sm:shadow-2xl"
           >
             <!-- Top Admin Header -->
-            <div class="border-b border-stone-200/70 bg-stone-900 p-4 text-white sm:flex sm:items-center sm:justify-between sm:gap-4 sm:p-6">
+            <div class="sticky top-0 z-10 border-b border-stone-200/70 bg-stone-900 p-4 text-white sm:static sm:flex sm:items-center sm:justify-between sm:gap-4 sm:p-6">
               <div>
                 <div class="flex items-center gap-2">
                   <span class="px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-400 text-stone-950 uppercase tracking-wider">
@@ -45,10 +47,10 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
                 </h2>
               </div>
 
-              <div class="mt-4 grid w-full grid-cols-2 gap-2 sm:mt-0 sm:flex sm:w-auto sm:flex-wrap sm:items-center sm:gap-3">
+              <div class="mt-4 flex w-full gap-2 overflow-x-auto pb-1 sm:mt-0 sm:w-auto sm:flex-wrap sm:items-center sm:gap-3 sm:overflow-visible sm:pb-0">
                 <button
                   (click)="openCreateModal()"
-                  class="col-span-2 flex min-h-11 items-center justify-center gap-1.5 rounded-2xl bg-white px-4 py-2.5 text-sm font-bold text-stone-900 shadow-md transition-all active:scale-95 hover:bg-stone-100 sm:text-xs"
+                  class="flex min-h-11 shrink-0 items-center justify-center gap-1.5 rounded-2xl bg-white px-4 py-2.5 text-sm font-bold text-stone-900 shadow-md transition-all active:scale-95 hover:bg-stone-100 sm:text-xs"
                 >
                   <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
@@ -56,22 +58,26 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
                   <span>Nuevo Producto</span>
                 </button>
 
-                <button (click)="isCategoryManagerOpen.update(value => !value)" class="min-h-11 rounded-2xl bg-stone-800 px-3 py-2.5 text-sm font-bold text-white transition-all hover:bg-stone-700 sm:px-4 sm:text-xs">
+                <button (click)="selectView('inventory')" [attr.aria-current]="activeView() === 'inventory' ? 'page' : null" [ngClass]="activeView() === 'inventory' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
+                  Productos
+                </button>
+
+                <button (click)="selectView('categories')" [attr.aria-current]="activeView() === 'categories' ? 'page' : null" [ngClass]="activeView() === 'categories' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
                   Categorías
                 </button>
-                <button (click)="toggleOrders()" class="min-h-11 rounded-2xl bg-stone-800 px-3 py-2.5 text-sm font-bold text-white transition-all hover:bg-stone-700 sm:px-4 sm:text-xs">
+                <button (click)="selectView('orders')" [attr.aria-current]="activeView() === 'orders' ? 'page' : null" [ngClass]="activeView() === 'orders' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
                   Pedidos
                 </button>
-                <button (click)="toggleContentManager()" class="min-h-11 rounded-2xl bg-stone-800 px-3 py-2.5 text-sm font-bold text-white transition-all hover:bg-stone-700 sm:px-4 sm:text-xs">
+                <button (click)="selectView('content')" [attr.aria-current]="activeView() === 'content' ? 'page' : null" [ngClass]="activeView() === 'content' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
                   Inicio
                 </button>
-                <button (click)="toggleThemeManager()" class="min-h-11 rounded-2xl bg-stone-800 px-3 py-2.5 text-sm font-bold text-white transition-all hover:bg-stone-700 sm:px-4 sm:text-xs">
+                <button (click)="selectView('themes')" [attr.aria-current]="activeView() === 'themes' ? 'page' : null" [ngClass]="activeView() === 'themes' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
                   Temas
                 </button>
-                <button (click)="toggleCollectionManager()" class="min-h-11 rounded-2xl bg-stone-800 px-3 py-2.5 text-sm font-bold text-white transition-all hover:bg-stone-700 sm:px-4 sm:text-xs">
+                <button (click)="selectView('collections')" [attr.aria-current]="activeView() === 'collections' ? 'page' : null" [ngClass]="activeView() === 'collections' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
                   Mini tiendas
                 </button>
-                <button (click)="isAdminManagerOpen.update(value => !value)" class="min-h-11 rounded-2xl bg-stone-800 px-3 py-2.5 text-sm font-bold text-white transition-all hover:bg-stone-700 sm:px-4 sm:text-xs">
+                <button (click)="selectView('administrators')" [attr.aria-current]="activeView() === 'administrators' ? 'page' : null" [ngClass]="activeView() === 'administrators' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
                   Administradores
                 </button>
 
@@ -118,7 +124,7 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
             </div>
 
             <!-- Filter & Search Subheader -->
-            @if (isCategoryManagerOpen()) {
+            @if (activeView() === 'categories') {
               <section class="p-6 border-b border-stone-100 bg-stone-50">
                 <div class="flex flex-col sm:flex-row gap-3 sm:items-end sm:justify-between">
                   <div class="flex-1">
@@ -142,7 +148,7 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
               </section>
             }
 
-            @if (isOrdersOpen()) {
+            @if (activeView() === 'orders') {
               <section class="p-6 border-b border-stone-100 bg-stone-50">
                 <div class="flex items-center justify-between mb-4"><h3 class="font-bold text-stone-900">Pedidos recientes</h3><button (click)="orderService.load()" class="text-xs font-semibold text-stone-600">Actualizar</button></div>
                 @if (orderService.orders().length === 0) {
@@ -164,7 +170,7 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
               </section>
             }
 
-            @if (isContentManagerOpen()) {
+            @if (activeView() === 'content') {
               <section class="p-6 border-b border-stone-100 bg-stone-50">
                 <div class="flex items-center justify-between gap-3 mb-4">
                   <div><h3 class="font-bold text-stone-900">Contenido de inicio</h3><p class="text-xs text-stone-500 mt-1">Edita los mensajes visibles en la página principal.</p></div>
@@ -181,7 +187,7 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
               </section>
             }
 
-            @if (isThemeManagerOpen()) {
+            @if (activeView() === 'themes') {
               <section class="p-6 border-b border-stone-100 bg-stone-50">
                 <div class="flex items-center justify-between gap-3 mb-4">
                   <div><h3 class="font-bold text-stone-900">Apariencia de la tienda</h3><p class="text-xs text-stone-500 mt-1">El tema elegido se publica para todos los visitantes.</p></div>
@@ -199,7 +205,7 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
               </section>
             }
 
-            @if (isCollectionManagerOpen()) {
+            @if (activeView() === 'collections') {
               <section class="p-6 border-b border-stone-100 bg-stone-50">
                 <div class="flex flex-col gap-3 sm:flex-row sm:items-end">
                   <label class="flex-1 text-xs font-semibold text-stone-600">Nombre de la mini tienda<input [(ngModel)]="newCollectionName" class="mt-1 w-full rounded-xl border border-stone-200 px-3 py-2 font-normal" placeholder="Ej. Regalos para oficina" /></label>
@@ -228,7 +234,7 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
               </section>
             }
 
-            @if (isAdminManagerOpen()) {
+            @if (activeView() === 'administrators') {
               <section class="p-6 border-b border-stone-100 bg-stone-50">
                 <h3 class="font-bold text-stone-900">Agregar administrador</h3>
                 <p class="text-xs text-stone-500 mt-1 mb-3">Enviaremos una invitación para que esta persona cree su contraseña y acceda al panel.</p>
@@ -239,6 +245,7 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
               </section>
             }
 
+            @if (activeView() === 'inventory') {
             <div class="flex items-center justify-between gap-3 border-b border-stone-100 bg-white px-4 py-3 sm:px-6">
               <div class="relative flex-1 max-w-sm">
                 <input
@@ -387,6 +394,7 @@ import { StorefrontCollection } from '../../../models/storefront-collection.mode
                 </table>
               </div>
             </div>
+            }
           </div>
         </div>
 
@@ -408,6 +416,8 @@ export class AdminDashboardComponent {
   public storefrontSettingsService = inject(StorefrontSettingsService);
   public collectionService = inject(StorefrontCollectionService);
 
+  public activeView = signal<AdminView>('inventory');
+
   public adminSearch = '';
   public isFormModalOpen = signal<boolean>(false);
   public selectedProductForEdit = signal<Product | null>(null);
@@ -426,6 +436,19 @@ export class AdminDashboardComponent {
   public newCollectionName = '';
   public newCollectionDescription = '';
   public selectedCollectionForEditId: string | null = null;
+
+  public selectView(view: AdminView): void {
+    this.activeView.set(view);
+
+    if (view === 'content') this.storefrontDraft = { ...this.storefrontSettingsService.settings() };
+    if (view === 'themes') this.themeDraft = this.storefrontSettingsService.settings().theme;
+    if (view === 'collections' && !this.selectedCollectionForEditId) {
+      this.selectedCollectionForEditId = this.collectionService.collections()[0]?.id ?? null;
+    }
+    if (view === 'orders') void this.orderService.load();
+
+    queueMicrotask(() => document.getElementById('admin-content')?.scrollTo({ top: 0, behavior: 'smooth' }));
+  }
 
   public async saveStorefrontContent(): Promise<void> {
     await this.storefrontSettingsService.save(this.storefrontDraft);
