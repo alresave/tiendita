@@ -103,22 +103,22 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
             </div>
 
             <!-- Stats Bar -->
-            <div [ngClass]="activeView() === 'inventory' ? 'grid' : 'hidden sm:grid'" class="grid-cols-1 gap-4 border-b border-stone-100 bg-stone-50 p-4 sm:grid-cols-3 sm:p-6">
-              <div class="bg-white p-4 rounded-2xl border border-stone-200/70 shadow-sm">
-                <span class="text-xs font-bold text-stone-400 uppercase tracking-wider block mb-1">Total Catálogo</span>
-                <span class="text-2xl font-black text-stone-900">{{ productService.totalProductsCount() }} productos</span>
+            <div [ngClass]="activeView() === 'inventory' ? 'grid' : 'hidden sm:grid'" class="grid-cols-3 gap-2 border-b border-stone-100 bg-stone-50 p-3 sm:gap-4 sm:p-6">
+              <div class="rounded-2xl border border-stone-200/70 bg-white p-3 shadow-sm sm:p-4">
+                <span class="mb-1 block text-[10px] font-bold uppercase tracking-wide text-stone-400 sm:text-xs sm:tracking-wider">Catálogo</span>
+                <span class="block text-base font-black text-stone-900 sm:text-2xl">{{ productService.totalProductsCount() }}<span class="hidden sm:inline"> productos</span></span>
               </div>
 
-              <div class="bg-white p-4 rounded-2xl border border-stone-200/70 shadow-sm">
-                <span class="text-xs font-bold text-stone-400 uppercase tracking-wider block mb-1">Stock Crítico (≤ 5)</span>
-                <span class="text-2xl font-black" [ngClass]="productService.lowStockCount() > 0 ? 'text-amber-600' : 'text-emerald-600'">
-                  {{ productService.lowStockCount() }} en alerta
+              <div class="rounded-2xl border border-stone-200/70 bg-white p-3 shadow-sm sm:p-4">
+                <span class="mb-1 block text-[10px] font-bold uppercase tracking-wide text-stone-400 sm:text-xs sm:tracking-wider">Stock crítico</span>
+                <span class="block text-base font-black sm:text-2xl" [ngClass]="productService.lowStockCount() > 0 ? 'text-amber-600' : 'text-emerald-600'">
+                  {{ productService.lowStockCount() }}<span class="hidden sm:inline"> en alerta</span>
                 </span>
               </div>
 
-              <div class="bg-white p-4 rounded-2xl border border-stone-200/70 shadow-sm">
-                <span class="text-xs font-bold text-stone-400 uppercase tracking-wider block mb-1">Valor Total Inventario</span>
-                <span class="text-2xl font-black text-stone-900">
+              <div class="rounded-2xl border border-stone-200/70 bg-white p-3 shadow-sm sm:p-4">
+                <span class="mb-1 block text-[10px] font-bold uppercase tracking-wide text-stone-400 sm:text-xs sm:tracking-wider">Inventario</span>
+                <span class="block truncate text-base font-black text-stone-900 sm:text-2xl">
                   \${{ productService.totalInventoryValue() | number:'1.2-2' }}
                 </span>
               </div>
@@ -266,7 +266,7 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
             </div>
 
             <!-- Products Table -->
-            <div class="flex-1 overflow-y-auto p-4 sm:p-6">
+            <div class="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
               <div class="space-y-3 sm:hidden">
                 @for (product of filteredAdminProducts(); track product.id) {
                   <article class="rounded-2xl border border-stone-200/80 bg-white p-4 shadow-sm">
@@ -278,15 +278,15 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
                         <p class="mt-1 font-mono text-sm font-bold text-stone-900">\${{ product.price | number:'1.2-2' }}</p>
                       </div>
                     </div>
-                    <div class="mt-4 flex items-center justify-between gap-3 border-t border-stone-100 pt-3">
+                    <div class="mt-4 flex flex-col gap-3 border-t border-stone-100 pt-3 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">
                       <div class="flex items-center gap-2" aria-label="Ajustar stock">
                         <button (click)="productService.adjustStock(product.id, -1)" class="flex h-11 w-11 items-center justify-center rounded-xl bg-stone-100 text-lg font-bold text-stone-700 transition-colors hover:bg-stone-200" [attr.aria-label]="'Reducir stock de ' + product.name">−</button>
                         <span class="min-w-11 rounded-lg px-2 py-2 text-center font-mono text-sm font-bold" [ngClass]="product.stock <= 5 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-50 text-emerald-800'">{{ product.stock }}</span>
                         <button (click)="productService.adjustStock(product.id, 1)" class="flex h-11 w-11 items-center justify-center rounded-xl bg-stone-100 text-lg font-bold text-stone-700 transition-colors hover:bg-stone-200" [attr.aria-label]="'Aumentar stock de ' + product.name">+</button>
                       </div>
-                      <div class="flex gap-2">
-                        <button (click)="openEditModal(product)" class="min-h-11 rounded-xl bg-stone-100 px-3 py-2 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-200">Editar</button>
-                        <button (click)="confirmDelete(product)" class="min-h-11 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-100">Eliminar</button>
+                      <div class="flex w-full gap-2 min-[380px]:w-auto">
+                        <button (click)="openEditModal(product)" class="min-h-11 flex-1 rounded-xl bg-stone-100 px-3 py-2 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-200 min-[380px]:flex-none">Editar</button>
+                        <button (click)="requestDelete(product)" class="min-h-11 flex-1 rounded-xl bg-rose-50 px-3 py-2 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-100 min-[380px]:flex-none">Eliminar</button>
                       </div>
                     </div>
                   </article>
@@ -383,7 +383,7 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
                           </button>
 
                           <button
-                            (click)="confirmDelete(product)"
+                            (click)="requestDelete(product)"
                             class="min-h-11 rounded-xl bg-rose-50 px-3 py-2 font-semibold text-rose-700 transition-colors hover:bg-rose-100"
                           >
                             Eliminar
@@ -405,6 +405,20 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
           [productToEdit]="selectedProductForEdit()"
           (close)="closeFormModal()"
         ></app-product-form-modal>
+
+        @if (productPendingDelete()) {
+          <div class="fixed inset-0 z-[60] flex items-end bg-stone-900/60 p-4 sm:items-center sm:justify-center sm:p-6" role="alertdialog" aria-modal="true" aria-labelledby="delete-product-title">
+            <div appFocusTrap class="w-full max-w-sm rounded-3xl border border-stone-200 bg-white p-5 shadow-2xl sm:p-6">
+              <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-rose-100 text-lg text-rose-700" aria-hidden="true">!</div>
+              <h2 id="delete-product-title" class="mt-4 text-lg font-black text-stone-900">¿Eliminar producto?</h2>
+              <p class="mt-2 text-sm leading-relaxed text-stone-600">Eliminarás <span class="font-bold text-stone-900">{{ productPendingDelete()!.name }}</span> del catálogo. Esta acción no se puede deshacer.</p>
+              <div class="mt-6 grid grid-cols-2 gap-3">
+                <button (click)="cancelDelete()" [disabled]="isDeletingProduct()" class="min-h-11 rounded-xl border border-stone-200 px-4 text-sm font-semibold text-stone-700 transition-colors hover:bg-stone-50 disabled:opacity-50">Cancelar</button>
+                <button (click)="deleteSelectedProduct()" [disabled]="isDeletingProduct()" class="min-h-11 rounded-xl bg-rose-600 px-4 text-sm font-bold text-white transition-colors hover:bg-rose-700 disabled:opacity-50">{{ isDeletingProduct() ? 'Eliminando…' : 'Eliminar' }}</button>
+              </div>
+            </div>
+          </div>
+        }
       </div>
     }
   `
@@ -422,6 +436,8 @@ export class AdminDashboardComponent {
   public adminSearch = '';
   public isFormModalOpen = signal<boolean>(false);
   public selectedProductForEdit = signal<Product | null>(null);
+  public productPendingDelete = signal<Product | null>(null);
+  public isDeletingProduct = signal<boolean>(false);
   public isCategoryManagerOpen = signal<boolean>(false);
   public isOrdersOpen = signal<boolean>(false);
   public isContentManagerOpen = signal<boolean>(false);
@@ -450,6 +466,8 @@ export class AdminDashboardComponent {
   public closeOnEscape(): void {
     if (this.isFormModalOpen()) {
       this.closeFormModal();
+    } else if (this.productPendingDelete()) {
+      this.cancelDelete();
     } else if (this.productService.isAdminOpen()) {
       this.productService.isAdminOpen.set(false);
     }
@@ -575,10 +593,21 @@ export class AdminDashboardComponent {
     this.selectedProductForEdit.set(null);
   }
 
-  public async confirmDelete(product: Product): Promise<void> {
-    if (confirm(`¿Estás seguro de eliminar "${product.name}"?`)) {
-      await this.productService.deleteProduct(product.id);
-    }
+  public requestDelete(product: Product): void {
+    this.productPendingDelete.set(product);
+  }
+
+  public cancelDelete(): void {
+    if (!this.isDeletingProduct()) this.productPendingDelete.set(null);
+  }
+
+  public async deleteSelectedProduct(): Promise<void> {
+    const product = this.productPendingDelete();
+    if (!product || this.isDeletingProduct()) return;
+    this.isDeletingProduct.set(true);
+    const deleted = await this.productService.deleteProduct(product.id);
+    this.isDeletingProduct.set(false);
+    if (deleted) this.productPendingDelete.set(null);
   }
 
   public async onLogout(): Promise<void> {
