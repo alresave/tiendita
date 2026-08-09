@@ -69,11 +69,12 @@ import { StorefrontCollectionService } from '../../services/storefront-collectio
             </div>
             <p class="text-xs text-stone-500">Cada marca reúne su catálogo completo.</p>
           </div>
-          <div class="mt-4 flex flex-wrap gap-2">
+          <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             @for (store of brandStores(); track store.name) {
-              <button (click)="selectBrandStore(store.name)" [attr.aria-pressed]="selectedBrand() === store.name" class="rounded-2xl border px-4 py-3 text-left transition-all active:scale-[0.98]" [ngClass]="selectedBrand() === store.name ? 'border-stone-900 bg-stone-900 text-white shadow-lg' : 'border-stone-200 bg-stone-50/50 text-stone-700 hover:border-stone-400 hover:bg-white'">
-                <span class="block text-sm font-black">{{ store.name }}</span>
-                <span class="mt-0.5 block text-xs" [ngClass]="selectedBrand() === store.name ? 'text-stone-300' : 'text-stone-500'">{{ store.count }} {{ store.count === 1 ? 'producto' : 'productos' }}</span>
+              <button (click)="selectBrandStore(store.name)" [attr.aria-pressed]="selectedBrand() === store.name" class="min-h-28 rounded-2xl border p-4 text-left transition-all active:scale-[0.98]" [ngClass]="selectedBrand() === store.name ? 'border-stone-900 bg-stone-900 text-white shadow-lg' : 'border-stone-200 bg-stone-50/50 text-stone-700 hover:border-stone-400 hover:bg-white'">
+                <span class="flex h-9 w-9 items-center justify-center rounded-xl text-sm" [ngClass]="selectedBrand() === store.name ? 'bg-white/15 text-white' : 'bg-stone-200/70 text-stone-700'" aria-hidden="true">◇</span>
+                <span class="mt-3 block text-base font-black">{{ store.name }}</span>
+                <span class="mt-1 block text-xs" [ngClass]="selectedBrand() === store.name ? 'text-stone-300' : 'text-stone-500'">{{ store.count }} {{ store.count === 1 ? 'producto' : 'productos' }}</span>
               </button>
             }
           </div>
