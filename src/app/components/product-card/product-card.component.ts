@@ -74,7 +74,10 @@ import { CartService } from '../../services/cart.service';
       <div class="pt-3 border-t border-stone-100 flex items-center justify-between gap-2">
         <div class="flex flex-col">
           <span class="text-[10px] uppercase font-bold text-stone-400 tracking-wider">Precio</span>
-          <span class="text-xl font-black text-stone-900">
+          @if (product.previous_price && product.previous_price > product.price) {
+            <span class="text-xs font-semibold text-stone-400 line-through">\${{ product.previous_price | number:'1.2-2' }}</span>
+          }
+          <span class="text-xl font-black" [ngClass]="product.previous_price && product.previous_price > product.price ? 'text-rose-600' : 'text-stone-900'">
             \${{ product.price | number:'1.2-2' }}
           </span>
         </div>

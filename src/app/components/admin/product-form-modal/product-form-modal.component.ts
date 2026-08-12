@@ -154,7 +154,23 @@ interface SpecRow {
                     class="w-full px-3.5 py-2.5 text-sm bg-stone-50 rounded-xl border border-stone-200 focus:bg-white focus:ring-2 focus:ring-stone-900 focus:outline-none font-mono"
                   />
                 </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">Precio anterior / oferta</label>
+                  <input type="number" step="0.01" min="0" [(ngModel)]="formData.previous_price" name="previous_price" placeholder="Opcional" class="w-full px-3.5 py-2.5 text-sm bg-stone-50 rounded-xl border border-stone-200 focus:bg-white focus:ring-2 focus:ring-stone-900 focus:outline-none font-mono" />
+                  <p class="mt-1 text-[10px] text-stone-400">Debe ser mayor al precio actual para mostrarse como oferta.</p>
+                </div>
+
+                <div>
+                  <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-1.5">Alerta de stock bajo</label>
+                  <input type="number" min="0" [(ngModel)]="formData.low_stock_threshold" name="low_stock_threshold" placeholder="5" class="w-full px-3.5 py-2.5 text-sm bg-stone-50 rounded-xl border border-stone-200 focus:bg-white focus:ring-2 focus:ring-stone-900 focus:outline-none font-mono" />
+                </div>
               </div>
+
+              <label class="flex items-center gap-2 rounded-xl border border-stone-200 bg-stone-50 px-3.5 py-3 text-sm font-semibold text-stone-700">
+                <input type="checkbox" [(ngModel)]="formData.is_active" name="is_active" class="h-4 w-4 rounded" />
+                Producto visible y disponible en el catálogo público
+              </label>
 
               <!-- Description -->
               <div>
@@ -311,6 +327,8 @@ export class ProductFormComponent implements OnInit {
     category: 'Audio',
     price: 99.99,
     stock: 10,
+    low_stock_threshold: 5,
+    is_active: true,
   };
 
   public imageUrls: string[] = ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=80'];
@@ -400,7 +418,10 @@ export class ProductFormComponent implements OnInit {
       brand: this.formData.brand?.trim() || null,
       description: this.formData.description.trim(),
       price: Number(this.formData.price),
+      previous_price: this.formData.previous_price === null || this.formData.previous_price === undefined ? null : Number(this.formData.previous_price),
       stock: Number(this.formData.stock),
+      low_stock_threshold: Number(this.formData.low_stock_threshold ?? 5),
+      is_active: this.formData.is_active !== false,
       specs: specsJson,
       images: validImages.length > 0 ? validImages : ['https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=80'],
     };

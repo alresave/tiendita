@@ -275,7 +275,7 @@ export class ProductGridComponent {
 
   // Computed filtering for performance
   public filteredProducts = computed(() => {
-    const all = this.productService.products();
+    const all = this.productService.products().filter((product) => product.is_active !== false);
     const query = this.productService.searchQuery().toLowerCase().trim();
     const category = this.productService.selectedCategory();
     const brand = this.selectedBrand()?.toLowerCase();

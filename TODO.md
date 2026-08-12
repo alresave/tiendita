@@ -46,11 +46,11 @@
 
 ## Catálogo e inventario
 
-- [ ] Activar o desactivar productos sin eliminarlos.
-- [ ] Añadir precio de oferta y precio anterior.
-- [ ] Mostrar alertas de stock bajo según el umbral del producto.
+- [x] Activar o desactivar productos sin eliminarlos.
+- [x] Añadir precio de oferta y precio anterior.
+- [x] Mostrar alertas de stock bajo según el umbral del producto.
 - [ ] Registrar y mostrar movimientos de inventario.
-- [ ] Propagar el renombrado de una categoría a sus productos asociados.
+- [x] Propagar el renombrado de una categoría a sus productos asociados.
 
 ## Operación y seguridad
 

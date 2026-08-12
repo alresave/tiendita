@@ -274,14 +274,14 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
                       <img [src]="product.images[0]" [alt]="product.name" class="h-14 w-14 shrink-0 rounded-xl bg-stone-100 object-contain p-1" />
                       <div class="min-w-0 flex-1">
                         <h3 class="truncate text-sm font-bold text-stone-900">{{ product.name }}</h3>
-                        <p class="mt-0.5 text-xs text-stone-500">{{ product.sku }} · {{ product.category || 'General' }}</p>
+                        <p class="mt-0.5 text-xs text-stone-500">{{ product.sku }} · {{ product.category || 'General' }} @if (product.is_active === false) { · Oculto }</p>
                         <p class="mt-1 font-mono text-sm font-bold text-stone-900">\${{ product.price | number:'1.2-2' }}</p>
                       </div>
                     </div>
                     <div class="mt-4 flex flex-col gap-3 border-t border-stone-100 pt-3 min-[380px]:flex-row min-[380px]:items-center min-[380px]:justify-between">
                       <div class="flex items-center gap-2" aria-label="Ajustar stock">
                         <button (click)="productService.adjustStock(product.id, -1)" class="flex h-11 w-11 items-center justify-center rounded-xl bg-stone-100 text-lg font-bold text-stone-700 transition-colors hover:bg-stone-200" [attr.aria-label]="'Reducir stock de ' + product.name">−</button>
-                        <span class="min-w-11 rounded-lg px-2 py-2 text-center font-mono text-sm font-bold" [ngClass]="product.stock <= 5 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-50 text-emerald-800'">{{ product.stock }}</span>
+                        <span class="min-w-11 rounded-lg px-2 py-2 text-center font-mono text-sm font-bold" [ngClass]="product.stock <= (product.low_stock_threshold ?? 5) ? 'bg-amber-100 text-amber-800' : 'bg-emerald-50 text-emerald-800'">{{ product.stock }}</span>
                         <button (click)="productService.adjustStock(product.id, 1)" class="flex h-11 w-11 items-center justify-center rounded-xl bg-stone-100 text-lg font-bold text-stone-700 transition-colors hover:bg-stone-200" [attr.aria-label]="'Aumentar stock de ' + product.name">+</button>
                       </div>
                       <div class="flex w-full gap-2 min-[380px]:w-auto">
@@ -358,7 +358,7 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
 
                             <span 
                               class="font-mono font-bold px-2 py-0.5 rounded text-xs"
-                              [ngClass]="product.stock <= 5 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-50 text-emerald-800'"
+                              [ngClass]="product.stock <= (product.low_stock_threshold ?? 5) ? 'bg-amber-100 text-amber-800' : 'bg-emerald-50 text-emerald-800'"
                             >
                               {{ product.stock }}
                             </span>

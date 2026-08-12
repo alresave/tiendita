@@ -8,7 +8,10 @@ export interface Product {
   name: string;
   description: string;
   price: number;
+  previous_price?: number | null;
   stock: number;
+  low_stock_threshold?: number;
+  is_active?: boolean;
   specs: ProductSpecs;
   images: string[];
   created_at?: string;

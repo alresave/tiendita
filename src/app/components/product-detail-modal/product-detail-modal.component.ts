@@ -104,7 +104,10 @@ import { FocusTrapDirective } from '../../directives/focus-trap.directive';
                 <div class="pt-4 border-t border-stone-100 flex items-center justify-between gap-4">
                   <div>
                     <span class="block text-xs text-stone-400 font-medium">Precio final</span>
-                    <span class="text-2xl font-black text-stone-900">
+                    @if (product.previous_price && product.previous_price > product.price) {
+                      <span class="mr-2 text-sm font-semibold text-stone-400 line-through">\${{ product.previous_price | number:'1.2-2' }}</span>
+                    }
+                    <span class="text-2xl font-black" [ngClass]="product.previous_price && product.previous_price > product.price ? 'text-rose-600' : 'text-stone-900'">
                       \${{ product.price | number:'1.2-2' }}
                     </span>
                   </div>

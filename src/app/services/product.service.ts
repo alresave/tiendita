@@ -142,7 +142,7 @@ export class ProductService {
   public totalProductsCount = computed(() => this.products().length);
 
   public lowStockCount = computed(() =>
-    this.products().filter((p) => p.stock <= 5).length
+    this.products().filter((p) => p.stock <= (p.low_stock_threshold ?? 5)).length
   );
 
   public totalInventoryValue = computed(() =>
@@ -197,7 +197,10 @@ export class ProductService {
           name: productData.name,
           description: productData.description,
           price: productData.price,
+          previous_price: productData.previous_price ?? null,
           stock: productData.stock,
+          low_stock_threshold: productData.low_stock_threshold ?? 5,
+          is_active: productData.is_active ?? true,
           category: productData.category,
           brand: productData.brand,
           specs: productData.specs,

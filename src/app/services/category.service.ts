@@ -2,6 +2,7 @@ import { Injectable, computed, inject, signal } from '@angular/core';
 import { Category } from '../models/category.model';
 import { SupabaseService } from './supabase.service';
 import { ToastService } from './toast.service';
+import { ProductService } from './product.service';
 
 const DEFAULT_CATEGORIES = ['Audio', 'Periféricos', 'Iluminación', 'Monitores', 'Accesorios'];
 
@@ -9,6 +10,7 @@ const DEFAULT_CATEGORIES = ['Audio', 'Periféricos', 'Iluminación', 'Monitores'
 export class CategoryService {
   private supabase = inject(SupabaseService);
   private toast = inject(ToastService);
+  private productService = inject(ProductService);
 
   public categories = signal<Category[]>([]);
   public names = computed(() => this.categories().map((category) => category.name));
@@ -53,7 +55,10 @@ export class CategoryService {
       .from('categories').update({ name: normalized }).eq('id', category.id);
     if (error) { this.toast.error('No se pudo actualizar la categoría', error.message); return false; }
     this.categories.update((categories) => categories.map((item) => item.id === category.id ? { ...item, name: normalized } : item));
-    this.toast.success('Categoría actualizada', 'Los productos asociados conservan su categoría actual.');
+    this.productService.products.update((products) => products.map((product) =>
+      product.category === category.name ? { ...product, category: normalized } : product
+    ));
+    this.toast.success('Categoría actualizada', 'Los productos asociados se actualizaron automáticamente.');
     return true;
   }
 

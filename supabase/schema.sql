@@ -13,7 +13,10 @@ CREATE TABLE IF NOT EXISTS public.products (
   name TEXT NOT NULL,
   description TEXT NOT NULL,
   price NUMERIC(10, 2) NOT NULL CHECK (price >= 0),
+  previous_price NUMERIC(10, 2) CHECK (previous_price IS NULL OR previous_price >= 0),
   stock INTEGER NOT NULL DEFAULT 0 CHECK (stock >= 0),
+  low_stock_threshold INTEGER NOT NULL DEFAULT 5 CHECK (low_stock_threshold >= 0),
+  is_active BOOLEAN NOT NULL DEFAULT true,
   category TEXT NOT NULL DEFAULT 'General',
   brand TEXT,
   specs JSONB DEFAULT '{}'::jsonb,
@@ -24,6 +27,9 @@ CREATE TABLE IF NOT EXISTS public.products (
 -- Compatible con instalaciones creadas antes de que se añadiera la categoría.
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS category TEXT NOT NULL DEFAULT 'General';
 ALTER TABLE public.products ADD COLUMN IF NOT EXISTS brand TEXT;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS previous_price NUMERIC(10, 2);
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS low_stock_threshold INTEGER NOT NULL DEFAULT 5;
+ALTER TABLE public.products ADD COLUMN IF NOT EXISTS is_active BOOLEAN NOT NULL DEFAULT true;
 
 -- Roles de aplicación. Solo se asignan desde el Dashboard de Supabase o con la
 -- service_role; el cliente nunca puede concederse permisos.
@@ -127,6 +133,7 @@ CREATE TABLE IF NOT EXISTS public.order_items (
 -- 5. Crear índices de alto rendimiento
 CREATE INDEX IF NOT EXISTS idx_products_sku ON public.products(sku);
 CREATE INDEX IF NOT EXISTS idx_products_brand ON public.products (brand) WHERE brand IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_products_active ON public.products (is_active) WHERE is_active;
 CREATE INDEX IF NOT EXISTS idx_collection_products_product_id ON public.collection_products (product_id);
 CREATE INDEX IF NOT EXISTS idx_products_created_at ON public.products(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_products_specs ON public.products USING gin(specs);
