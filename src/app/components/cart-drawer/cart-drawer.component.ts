@@ -1,12 +1,13 @@
 import { Component, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { CartService } from '../../services/cart.service';
 import { FocusTrapDirective } from '../../directives/focus-trap.directive';
 
 @Component({
   selector: 'app-cart-drawer',
   standalone: true,
-  imports: [CommonModule, FocusTrapDirective],
+  imports: [CommonModule, FormsModule, FocusTrapDirective],
   template: `
     @if (cartService.isDrawerOpen()) {
       <div class="fixed inset-0 z-50 overflow-hidden" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
@@ -154,6 +155,20 @@ import { FocusTrapDirective } from '../../directives/focus-trap.directive';
             <!-- Drawer Footer: Checkout Summary -->
             @if (!cartService.isEmpty()) {
               <div class="p-6 border-t border-stone-100 bg-stone-50/50 space-y-3">
+                <details class="rounded-xl border border-stone-200 bg-white p-3" open>
+                  <summary class="cursor-pointer text-xs font-bold text-stone-800">Datos de envío</summary>
+                  <div class="mt-3 grid grid-cols-2 gap-2">
+                    <input [(ngModel)]="checkout.name" class="col-span-2 rounded-lg border border-stone-200 px-3 py-2 text-xs" placeholder="Nombre completo *" autocomplete="name" />
+                    <input [(ngModel)]="checkout.email" type="email" class="col-span-2 rounded-lg border border-stone-200 px-3 py-2 text-xs" placeholder="Correo electrónico *" autocomplete="email" />
+                    <input [(ngModel)]="checkout.phone" type="tel" class="col-span-2 rounded-lg border border-stone-200 px-3 py-2 text-xs" placeholder="Teléfono *" autocomplete="tel" />
+                    <input [(ngModel)]="checkout.address.line1" class="col-span-2 rounded-lg border border-stone-200 px-3 py-2 text-xs" placeholder="Calle y número *" autocomplete="address-line1" />
+                    <input [(ngModel)]="checkout.address.line2" class="col-span-2 rounded-lg border border-stone-200 px-3 py-2 text-xs" placeholder="Interior, referencia (opcional)" autocomplete="address-line2" />
+                    <input [(ngModel)]="checkout.address.city" class="rounded-lg border border-stone-200 px-3 py-2 text-xs" placeholder="Ciudad *" autocomplete="address-level2" />
+                    <input [(ngModel)]="checkout.address.state" class="rounded-lg border border-stone-200 px-3 py-2 text-xs" placeholder="Estado *" autocomplete="address-level1" />
+                    <input [(ngModel)]="checkout.address.postal_code" inputmode="numeric" class="rounded-lg border border-stone-200 px-3 py-2 text-xs" placeholder="C.P. *" autocomplete="postal-code" />
+                    <textarea [(ngModel)]="checkout.note" class="col-span-2 rounded-lg border border-stone-200 px-3 py-2 text-xs" rows="2" placeholder="Notas para tu pedido (opcional)"></textarea>
+                  </div>
+                </details>
                 <div class="flex items-center justify-between text-xs text-stone-500">
                   <span>Subtotal</span>
                   <span class="font-mono font-semibold text-stone-800">
@@ -205,6 +220,7 @@ import { FocusTrapDirective } from '../../directives/focus-trap.directive';
 })
 export class CartDrawerComponent {
   public cartService = inject(CartService);
+  public checkout = { name: '', email: '', phone: '', note: '', address: { line1: '', line2: '', city: '', state: '', postal_code: '', country: 'MX' } };
 
   @HostListener('document:keydown.escape')
   public closeOnEscape(): void {
@@ -212,7 +228,7 @@ export class CartDrawerComponent {
   }
 
   public async onCheckout(): Promise<void> {
-    const success = await this.cartService.checkoutWithEdgeFunction();
+    const success = await this.cartService.checkoutWithEdgeFunction(this.checkout);
     if (success) {
       this.cartService.closeDrawer();
     }

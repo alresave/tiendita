@@ -9,7 +9,13 @@ const corsHeaders = (origin: string | null) => ({
 interface CheckoutPayload {
   cartId?: string;
   sessionId?: string;
-  items: { productId: string; quantity: number }[];
+  customer?: {
+    name?: string;
+    email?: string;
+    phone?: string;
+    note?: string;
+    address?: { recipient_name?: string; line1?: string; line2?: string; city?: string; state?: string; postal_code?: string; country?: string };
+  };
 }
 
 serve(async (req) => {
@@ -22,16 +28,31 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
     );
     const body: CheckoutPayload = await req.json();
-    if (!body.cartId || !body.sessionId || !body.items?.length) {
+    if (!body.cartId || !body.sessionId || !body.customer) {
       return new Response(JSON.stringify({ error: "El carrito no es válido." }), {
         status: 400, headers: { ...headers, "Content-Type": "application/json" },
       });
     }
 
-    const { data, error } = await supabase.rpc("process_checkout", {
+    const authHeader = req.headers.get("authorization");
+    let userId: string | null = null;
+    if (authHeader) {
+      const userClient = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_ANON_KEY") ?? "", { global: { headers: { Authorization: authHeader } } });
+      const { data: userData } = await userClient.auth.getUser();
+      userId = userData.user?.id ?? null;
+    }
+    const forwarded = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim();
+    const rateKey = userId ? `user:${userId}` : `ip:${forwarded || body.sessionId}`;
+    const { data, error } = await supabase.rpc("process_checkout_v2", {
       p_cart_id: body.cartId,
       p_session_id: body.sessionId,
-      p_items: body.items,
+      p_customer_name: body.customer.name || "",
+      p_customer_email: body.customer.email || "",
+      p_customer_phone: body.customer.phone || "",
+      p_shipping_address: body.customer.address || {},
+      p_customer_note: body.customer.note || "",
+      p_user_id: userId,
+      p_rate_key: rateKey,
     });
     if (error) throw error;
 

@@ -30,6 +30,14 @@ La migración `20260805170000_secure_carts_and_atomic_checkout.sql` protege los
 carritos por sesión y añade el checkout atómico. Aplícala antes de desplegar la
 versión más reciente de la función `checkout`.
 
+Después aplica `supabase/migrations/20260829120000_checkout_customers_inventory_security.sql`
+y despliega las funciones `checkout` y `order-status-notification`. La primera
+añade datos de envío, historial por cliente, auditoría, movimientos de inventario
+y un límite de 8 intentos de checkout por 10 minutos. Configura en las Edge
+Functions `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`,
+`PUBLIC_SITE_URL`, `RESEND_API_KEY` y `RESEND_FROM_EMAIL`; usa un remitente de
+Resend verificado antes de producción.
+
 La migración `20260805200000_admin_invites_and_storefront_content.sql` habilita
 el contenido editable de inicio. Después de aplicarla, despliega la función
 `invite-admin`; así los administradores pueden invitar a otros administradores

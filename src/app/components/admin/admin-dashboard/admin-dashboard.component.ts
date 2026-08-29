@@ -155,15 +155,11 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
                 @if (orderService.orders().length === 0) {
                   <p class="text-xs text-stone-500">Aún no hay pedidos.</p>
                 } @else {
-                  <div class="space-y-2">
+                  <div class="space-y-3">
                     @for (order of orderService.orders(); track order.id) {
-                      <div class="bg-white border border-stone-200 rounded-xl p-3 flex flex-wrap items-center gap-3 text-xs">
-                        <span class="font-mono font-bold text-stone-900">{{ order.order_number }}</span>
-                        <span class="text-stone-500">{{ order.created_at | date:'short' }}</span>
-                        <span class="font-bold ml-auto">\${{ order.total | number:'1.2-2' }}</span>
-                        <select [ngModel]="order.status" (ngModelChange)="orderService.setStatus(order, $event)" class="rounded-lg border border-stone-200 px-2 py-1 text-xs">
-                          <option value="pending">Pendiente</option><option value="paid">Pagado</option><option value="shipped">Enviado</option><option value="cancelled">Cancelado</option>
-                        </select>
+                      <div class="bg-white border border-stone-200 rounded-xl p-3 text-xs">
+                        <div class="flex flex-wrap items-center gap-3"><span class="font-mono font-bold text-stone-900">{{ order.order_number }}</span><span class="text-stone-500">{{ order.created_at | date:'short' }}</span><span class="font-bold ml-auto">\${{ order.total | number:'1.2-2' }}</span><select [ngModel]="order.status" (ngModelChange)="orderService.setStatus(order, $event)" class="rounded-lg border border-stone-200 px-2 py-1 text-xs"><option value="pending">Pendiente</option><option value="paid">Pagado</option><option value="shipped">Enviado</option><option value="cancelled">Cancelado</option></select></div>
+                        <div class="mt-3 grid gap-2 border-t border-stone-100 pt-3 sm:grid-cols-2"><div><p class="font-semibold text-stone-800">{{ order.customer_name || 'Cliente sin nombre' }}</p><p class="text-stone-500">{{ order.customer_email }} · {{ order.customer_phone }}</p><p class="mt-1 text-stone-600">{{ order.shipping_address?.line1 }}, {{ order.shipping_address?.city }} {{ order.shipping_address?.state }} {{ order.shipping_address?.postal_code }}</p>@if (order.customer_note) { <p class="mt-1 text-stone-500">Nota del cliente: {{ order.customer_note }}</p> }</div><div><p class="font-semibold text-stone-700">Productos</p>@for (item of order.order_items || []; track item.product_name) { <p class="text-stone-500">{{ item.quantity }}× {{ item.product_name }} — \${{ item.unit_price | number:'1.2-2' }}</p> }<textarea #adminNote class="mt-2 w-full rounded-lg border border-stone-200 px-2 py-1" rows="2" [value]="order.admin_note || ''" placeholder="Nota interna"></textarea><button (click)="orderService.saveAdminNote(order, adminNote.value)" class="mt-1 text-xs font-semibold text-stone-700">Guardar nota</button></div></div>
                       </div>
                     }
                   </div>

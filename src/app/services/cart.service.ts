@@ -5,6 +5,14 @@ import { ToastService } from './toast.service';
 import { SupabaseService } from './supabase.service';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
+export interface CheckoutDetails {
+  name: string;
+  email: string;
+  phone: string;
+  note?: string;
+  address: { line1: string; line2?: string; city: string; state: string; postal_code: string; country?: string };
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -272,16 +280,17 @@ export class CartService implements OnDestroy {
   /**
    * Invoca la Supabase Edge Function 'checkout' para procesamiento atómico de órdenes
    */
-  public async checkoutWithEdgeFunction(): Promise<boolean> {
+  public async checkoutWithEdgeFunction(customer: CheckoutDetails): Promise<boolean> {
     if (this.isEmpty()) return false;
+    if (!customer.name.trim() || !customer.email.trim() || !customer.phone.trim() || !customer.address.line1.trim() || !customer.address.city.trim() || !customer.address.postal_code.trim()) {
+      this.toastService.warning('Completa los datos de envío', 'Nombre, correo, teléfono, calle, ciudad y código postal son obligatorios.');
+      return false;
+    }
 
     const payload = {
       cartId: this.dbCartId,
       sessionId: this.sessionId,
-      items: this.cart().map((item) => ({
-        productId: item.product.id,
-        quantity: item.quantity,
-      })),
+      customer,
     };
 
     if (this.supabaseService.isReady) {

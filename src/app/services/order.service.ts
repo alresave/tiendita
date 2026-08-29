@@ -21,8 +21,16 @@ export class OrderService {
   }
 
   public async setStatus(order: StoreOrder, status: OrderStatus): Promise<void> {
-    const { error } = await this.supabase.clientInstance!.from('orders').update({ status }).eq('id', order.id);
+    const { error } = await this.supabase.clientInstance!.from('orders').update({ status, status_updated_at: new Date().toISOString() }).eq('id', order.id);
     if (error) { this.toast.error('No se pudo actualizar el pedido', error.message); return; }
     this.orders.update((orders) => orders.map((item) => item.id === order.id ? { ...item, status } : item));
+    const { error: notificationError } = await this.supabase.clientInstance!.functions.invoke('order-status-notification', { body: { orderId: order.id, status } });
+    if (notificationError) this.toast.warning('Estado actualizado', 'No se pudo enviar el correo de actualización al cliente.');
+  }
+
+  public async saveAdminNote(order: StoreOrder, admin_note: string): Promise<void> {
+    const { error } = await this.supabase.clientInstance!.from('orders').update({ admin_note }).eq('id', order.id);
+    if (error) { this.toast.error('No se pudo guardar la nota', error.message); return; }
+    this.orders.update((orders) => orders.map((item) => item.id === order.id ? { ...item, admin_note } : item));
   }
 }

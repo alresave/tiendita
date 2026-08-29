@@ -33,10 +33,10 @@
 
 ## Próxima entrega: checkout y pedidos
 
-- [ ] Capturar nombre, teléfono y dirección de envío en el checkout.
-- [ ] Guardar la dirección seleccionada en el pedido.
-- [ ] Mostrar detalle del pedido, productos, dirección y notas internas en administración.
-- [ ] Permitir actualizar el estado del pedido y notificar al cliente.
+- [x] Capturar nombre, teléfono y dirección de envío en el checkout.
+- [x] Guardar la dirección seleccionada en el pedido.
+- [x] Mostrar detalle del pedido, productos, dirección y notas internas en administración.
+- [x] Permitir actualizar el estado del pedido y notificar al cliente.
 
 ## Clientes
 
@@ -49,13 +49,14 @@
 - [x] Activar o desactivar productos sin eliminarlos.
 - [x] Añadir precio de oferta y precio anterior.
 - [x] Mostrar alertas de stock bajo según el umbral del producto.
-- [ ] Registrar y mostrar movimientos de inventario.
+- [x] Registrar movimientos de inventario automáticamente para ajustes y ventas.
+- [ ] Mostrar movimientos de inventario en una vista administrativa dedicada.
 - [x] Propagar el renombrado de una categoría a sus productos asociados.
 
 ## Operación y seguridad
 
-- [ ] Añadir límite de solicitudes al checkout.
-- [ ] Registrar cambios administrativos en la bitácora de auditoría.
+- [x] Añadir límite de solicitudes al checkout.
+- [x] Registrar cambios administrativos en la bitácora de auditoría.
 - [ ] Configurar un dominio propio y restringir CORS a ese dominio.
 - [ ] Configurar un remitente verificado de Resend con el dominio propio.
 - [ ] Integrar un proveedor de pago y validar pagos con webhooks firmados.
