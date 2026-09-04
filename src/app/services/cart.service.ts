@@ -294,11 +294,12 @@ export class CartService implements OnDestroy {
     };
 
     if (this.supabaseService.isReady) {
-      const client = this.sessionClient;
+      const client = this.supabaseService.clientInstance!;
       if (!client) return false;
       try {
         const { data, error } = await client.functions.invoke('checkout', {
           body: payload,
+          headers: { 'x-session-id': this.sessionId },
         });
 
         if (error) {

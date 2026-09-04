@@ -12,8 +12,9 @@ import { STOREFRONT_THEMES, StorefrontSettings, StorefrontTheme } from '../../..
 import { StorefrontCollectionService } from '../../../services/storefront-collection.service';
 import { StorefrontCollection } from '../../../models/storefront-collection.model';
 import { FocusTrapDirective } from '../../../directives/focus-trap.directive';
+import { InventoryMovementService } from '../../../services/inventory-movement.service';
 
-type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 'collections' | 'administrators';
+type AdminView = 'inventory' | 'movements' | 'categories' | 'orders' | 'content' | 'themes' | 'collections' | 'administrators';
 
 @Component({
   selector: 'app-admin-dashboard',
@@ -61,6 +62,10 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
 
                 <button (click)="selectView('inventory')" [attr.aria-current]="activeView() === 'inventory' ? 'page' : null" [ngClass]="activeView() === 'inventory' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
                   <span aria-hidden="true">▦</span> Productos
+                </button>
+
+                <button (click)="selectView('movements')" [attr.aria-current]="activeView() === 'movements' ? 'page' : null" [ngClass]="activeView() === 'movements' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
+                  <span aria-hidden="true">↕</span> Movimientos
                 </button>
 
                 <button (click)="selectView('categories')" [attr.aria-current]="activeView() === 'categories' ? 'page' : null" [ngClass]="activeView() === 'categories' ? 'bg-white text-stone-900' : 'bg-stone-800 text-white hover:bg-stone-700'" class="min-h-11 shrink-0 rounded-2xl px-3 py-2.5 text-sm font-bold transition-all sm:px-4 sm:text-xs">
@@ -164,6 +169,15 @@ type AdminView = 'inventory' | 'categories' | 'orders' | 'content' | 'themes' | 
                     }
                   </div>
                 }
+              </section>
+            }
+
+            @if (activeView() === 'movements') {
+              <section class="min-h-full flex-1 bg-stone-50 p-4 sm:min-h-0 sm:flex-none sm:border-b sm:border-stone-100 sm:p-6">
+                <div class="mb-4 flex items-center justify-between"><div><h3 class="font-bold text-stone-900">Movimientos de inventario</h3><p class="mt-1 text-xs text-stone-500">Últimos 100 ajustes y ventas registrados.</p></div><button (click)="inventoryMovementService.load()" class="rounded-xl border border-stone-200 bg-white px-3 py-2 text-xs font-semibold text-stone-700">Actualizar</button></div>
+                @if (inventoryMovementService.isLoading()) { <p class="text-xs text-stone-500">Cargando movimientos…</p> }
+                @else if (inventoryMovementService.movements().length === 0) { <p class="text-xs text-stone-500">Aún no hay movimientos registrados.</p> }
+                @else { <div class="space-y-2">@for (movement of inventoryMovementService.movements(); track movement.id) { <article class="flex flex-wrap items-center gap-x-3 gap-y-1 rounded-xl border border-stone-200 bg-white p-3 text-xs"><span class="min-w-14 rounded-lg px-2 py-1 text-center font-mono font-bold" [ngClass]="movement.delta > 0 ? 'bg-emerald-50 text-emerald-700' : 'bg-rose-50 text-rose-700'">{{ movement.delta > 0 ? '+' : '' }}{{ movement.delta }}</span><span class="font-semibold text-stone-900">{{ movement.products?.name || 'Producto eliminado' }}</span><span class="text-stone-400">{{ movement.products?.sku || movement.product_id }}</span><span class="text-stone-600">{{ movement.reason }}</span><time class="ml-auto text-stone-400">{{ movement.created_at | date:'short' }}</time></article> }</div> }
               </section>
             }
 
@@ -424,6 +438,7 @@ export class AdminDashboardComponent {
   public authService = inject(AuthService);
   public categoryService = inject(CategoryService);
   public orderService = inject(OrderService);
+  public inventoryMovementService = inject(InventoryMovementService);
   public storefrontSettingsService = inject(StorefrontSettingsService);
   public collectionService = inject(StorefrontCollectionService);
 
@@ -453,7 +468,7 @@ export class AdminDashboardComponent {
   private getSavedView(): AdminView {
     if (typeof localStorage === 'undefined') return 'inventory';
     const value = localStorage.getItem('tiendita.admin-view');
-    return ['inventory', 'categories', 'orders', 'content', 'themes', 'collections', 'administrators'].includes(value ?? '')
+    return ['inventory', 'movements', 'categories', 'orders', 'content', 'themes', 'collections', 'administrators'].includes(value ?? '')
       ? value as AdminView
       : 'inventory';
   }
@@ -479,6 +494,7 @@ export class AdminDashboardComponent {
       this.selectedCollectionForEditId = this.collectionService.collections()[0]?.id ?? null;
     }
     if (view === 'orders') void this.orderService.load();
+    if (view === 'movements') void this.inventoryMovementService.load();
 
     queueMicrotask(() => document.getElementById('admin-content')?.scrollTo({ top: 0, behavior: 'smooth' }));
   }

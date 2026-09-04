@@ -40,8 +40,8 @@
 
 ## Clientes
 
-- [ ] Crear perfil de cliente y gestión de direcciones guardadas.
-- [ ] Añadir historial de pedidos para clientes autenticados.
+- [x] Crear perfil de cliente y gestión de direcciones guardadas.
+- [x] Añadir historial de pedidos para clientes autenticados.
 - [x] Completar la pantalla de creación y cambio de contraseña al volver desde invitación o recuperación.
 
 ## Catálogo e inventario
@@ -50,7 +50,7 @@
 - [x] Añadir precio de oferta y precio anterior.
 - [x] Mostrar alertas de stock bajo según el umbral del producto.
 - [x] Registrar movimientos de inventario automáticamente para ajustes y ventas.
-- [ ] Mostrar movimientos de inventario en una vista administrativa dedicada.
+- [x] Mostrar movimientos de inventario en una vista administrativa dedicada.
 - [x] Propagar el renombrado de una categoría a sus productos asociados.
 
 ## Operación y seguridad

@@ -5,6 +5,7 @@ import { CartService } from '../../services/cart.service';
 import { ProductService } from '../../services/product.service';
 import { SupabaseService } from '../../services/supabase.service';
 import { AuthService } from '../../services/auth.service';
+import { CustomerAccountService } from '../../services/customer-account.service';
 
 @Component({
   selector: 'app-navbar',
@@ -71,6 +72,9 @@ import { AuthService } from '../../services/auth.service';
 
         <!-- Actions: Admin Control & Cart -->
         <div class="flex shrink-0 items-center gap-2 sm:gap-2.5">
+          <button (click)="onCustomerClick()" class="min-h-11 rounded-2xl border border-stone-200 px-3 py-2 text-xs font-semibold text-stone-700 hover:bg-stone-100">
+            {{ authService.isCustomerAuthenticated() ? 'Mi cuenta' : 'Entrar' }}
+          </button>
           <!-- Admin Access Button -->
           <button
             (click)="onAdminClick()"
@@ -122,6 +126,7 @@ export class NavbarComponent {
   public productService = inject(ProductService);
   public supabaseService = inject(SupabaseService);
   public authService = inject(AuthService);
+  private customerAccount = inject(CustomerAccountService);
 
   public onAdminClick(): void {
     if (this.authService.isAuthenticated()) {
@@ -129,5 +134,12 @@ export class NavbarComponent {
     } else {
       this.authService.isAuthModalOpen.set(true);
     }
+  }
+
+  public async onCustomerClick(): Promise<void> {
+    const user = this.authService.customerUser();
+    if (!user) { this.authService.isCustomerAuthOpen.set(true); return; }
+    await this.customerAccount.load(user.id);
+    this.authService.isCustomerAccountOpen.set(true);
   }
 }

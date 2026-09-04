@@ -17,13 +17,18 @@ export class AuthService {
 
   // Signals de estado de usuario
   public currentUser = signal<UserSession | null>(null);
+  /** Sesión de cualquier cliente autenticado; `currentUser` sigue reservado para administración. */
+  public customerUser = signal<UserSession | null>(null);
   public isAuthModalOpen = signal<boolean>(false);
+  public isCustomerAuthOpen = signal<boolean>(false);
+  public isCustomerAccountOpen = signal<boolean>(false);
   public isPasswordSetupOpen = signal<boolean>(false);
   public isLoading = signal<boolean>(false);
   private readonly invitationLinkDetected = this.getAuthFlowType() === 'invite';
 
   // Signal computado para verificar autenticación
   public isAuthenticated = computed(() => this.currentUser() !== null);
+  public isCustomerAuthenticated = computed(() => this.customerUser() !== null);
 
   constructor() {
     this.initAuthListener();
@@ -37,6 +42,7 @@ export class AuthService {
     // Escuchar eventos de autenticación de Supabase Auth
     client.auth.onAuthStateChange(async (event, session) => {
       if (session?.user) {
+        this.customerUser.set({ id: session.user.id, email: session.user.email || '' });
         await this.loadAdminSession(session.user.id, session.user.email || '');
         if (event === 'PASSWORD_RECOVERY' || this.invitationLinkDetected) {
           this.isAuthModalOpen.set(false);
@@ -44,6 +50,7 @@ export class AuthService {
         }
       } else if (event === 'SIGNED_OUT') {
         this.currentUser.set(null);
+        this.customerUser.set(null);
         this.isPasswordSetupOpen.set(false);
       }
     });
@@ -95,8 +102,50 @@ export class AuthService {
     }
 
     this.currentUser.set(null);
+    this.customerUser.set(null);
+    this.isCustomerAccountOpen.set(false);
     this.isPasswordSetupOpen.set(false);
     this.toastService.info('Sesión Cerrada', 'Has salido del panel de administración.');
+  }
+
+  public async loginCustomer(email: string, password: string): Promise<boolean> {
+    if (!this.supabaseService.isReady) {
+      this.toastService.error('Cuenta no disponible', 'Configura Supabase para iniciar sesión.');
+      return false;
+    }
+    this.isLoading.set(true);
+    const { data, error } = await this.supabaseService.clientInstance!.auth.signInWithPassword({ email, password });
+    this.isLoading.set(false);
+    if (error || !data.user) {
+      this.toastService.error('No se pudo iniciar sesión', error?.message);
+      return false;
+    }
+    this.customerUser.set({ id: data.user.id, email: data.user.email || email });
+    this.isCustomerAuthOpen.set(false);
+    this.isCustomerAccountOpen.set(true);
+    return true;
+  }
+
+  public async registerCustomer(email: string, password: string): Promise<boolean> {
+    if (!this.supabaseService.isReady) {
+      this.toastService.error('Cuenta no disponible', 'Configura Supabase para crear una cuenta.');
+      return false;
+    }
+    this.isLoading.set(true);
+    const { data, error } = await this.supabaseService.clientInstance!.auth.signUp({ email, password });
+    this.isLoading.set(false);
+    if (error) {
+      this.toastService.error('No se pudo crear la cuenta', error.message);
+      return false;
+    }
+    if (data.user && data.session) {
+      this.customerUser.set({ id: data.user.id, email: data.user.email || email });
+      this.isCustomerAuthOpen.set(false);
+      this.isCustomerAccountOpen.set(true);
+    } else {
+      this.toastService.success('Revisa tu correo', 'Confirma tu correo para activar tu cuenta.');
+    }
+    return true;
   }
 
   public async requestPasswordReset(email: string): Promise<void> {

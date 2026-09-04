@@ -11,7 +11,7 @@ import { ToastService } from '../../services/toast.service';
   standalone: true,
   imports: [CommonModule, FormsModule, FocusTrapDirective],
   template: `
-    @if (authService.isAuthModalOpen() || authService.isPasswordSetupOpen()) {
+    @if (authService.isAuthModalOpen() || authService.isPasswordSetupOpen() || authService.isCustomerAuthOpen()) {
       <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="auth-modal-title" role="dialog" aria-modal="true">
         <!-- Backdrop -->
         <div 
@@ -42,9 +42,9 @@ import { ToastService } from '../../services/toast.service';
                   <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
               </div>
-              <h3 class="text-2xl font-black text-stone-900 tracking-tight">{{ authService.isPasswordSetupOpen() ? 'Crea tu contraseña' : 'Acceso Administrador' }}</h3>
+              <h3 class="text-2xl font-black text-stone-900 tracking-tight">{{ authService.isPasswordSetupOpen() ? 'Crea tu contraseña' : authService.isCustomerAuthOpen() ? (isRegister ? 'Crea tu cuenta' : 'Entra a tu cuenta') : 'Acceso Administrador' }}</h3>
               <p class="text-xs text-stone-500 mt-1 leading-relaxed">
-                {{ authService.isPasswordSetupOpen() ? 'Elige una contraseña para activar tu acceso de administrador.' : 'Ingresa con tu cuenta de Supabase Auth para gestionar el catálogo e inventario.' }}
+                {{ authService.isPasswordSetupOpen() ? 'Elige una contraseña para activar tu acceso de administrador.' : authService.isCustomerAuthOpen() ? 'Guarda direcciones y consulta tus pedidos desde cualquier dispositivo.' : 'Ingresa con tu cuenta de Supabase Auth para gestionar el catálogo e inventario.' }}
               </p>
             </div>
 
@@ -119,11 +119,12 @@ import { ToastService } from '../../services/toast.service';
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                   </svg>
                 }
-                <span>{{ authService.isPasswordSetupOpen() ? 'Guardar contraseña' : 'Iniciar Sesión' }}</span>
+                <span>{{ authService.isPasswordSetupOpen() ? 'Guardar contraseña' : isRegister ? 'Crear cuenta' : 'Iniciar Sesión' }}</span>
               </button>
             </form>
 
             @if (!authService.isPasswordSetupOpen()) {
+            @if (authService.isCustomerAuthOpen()) { <button type="button" (click)="isRegister = !isRegister" class="w-full mt-3 text-xs font-semibold text-stone-500 hover:text-stone-900">{{ isRegister ? 'Ya tengo cuenta' : 'Crear una cuenta' }}</button> }
             <button type="button" (click)="onPasswordReset()" class="w-full mt-4 text-xs font-semibold text-stone-500 hover:text-stone-900">
               ¿Olvidaste tu contraseña?
             </button>
@@ -145,6 +146,7 @@ export class AuthModalComponent {
   public newPassword = '';
   public confirmPassword = '';
   public showPassword = signal<boolean>(false);
+  public isRegister = false;
 
   @HostListener('document:keydown.escape')
   public closeOnEscape(): void {
@@ -154,6 +156,7 @@ export class AuthModalComponent {
   public close(): void {
     this.authService.isAuthModalOpen.set(false);
     this.authService.isPasswordSetupOpen.set(false);
+    this.authService.isCustomerAuthOpen.set(false);
   }
 
   public async onSubmit(): Promise<void> {
@@ -166,7 +169,10 @@ export class AuthModalComponent {
       if (success) this.productService.isAdminOpen.set(true);
       return;
     }
-    await this.onLogin();
+    if (this.authService.isCustomerAuthOpen()) {
+      const success = this.isRegister ? await this.authService.registerCustomer(this.email, this.password) : await this.authService.loginCustomer(this.email, this.password);
+      if (success && this.authService.customerUser()) this.productService.isAdminOpen.set(false);
+    } else await this.onLogin();
   }
 
   public async onLogin(): Promise<void> {

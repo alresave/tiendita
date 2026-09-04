@@ -11,6 +11,7 @@ import { ProductService } from './services/product.service';
 import { CartService } from './services/cart.service';
 import { AuthService } from './services/auth.service';
 import { ToastService } from './services/toast.service';
+import { CustomerAccountComponent } from './components/customer-account/customer-account.component';
 
 @Component({
   selector: 'app-root',
@@ -23,6 +24,7 @@ import { ToastService } from './services/toast.service';
     ToastContainerComponent,
     AdminDashboardComponent,
     AuthModalComponent,
+    CustomerAccountComponent,
   ],
   template: `
     <div class="min-h-screen flex flex-col bg-stone-50 font-sans selection:bg-stone-900 selection:text-white" [class]="'theme-' + storefrontSettings.settings().theme">
@@ -67,6 +69,9 @@ import { ToastService } from './services/toast.service';
       }
       @defer (when authService.isAuthModalOpen() || authService.isPasswordSetupOpen()) {
         <app-auth-modal></app-auth-modal>
+      }
+      @defer (when authService.isCustomerAccountOpen()) {
+        <app-customer-account></app-customer-account>
       }
       @defer (when toastService.toasts().length > 0) {
         <app-toast-container></app-toast-container>
