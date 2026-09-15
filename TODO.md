@@ -22,7 +22,22 @@
 - [x] Permitir que personas invitadas creen o restablezcan su contraseña desde la tienda.
 - [x] Configurar la URL pública de Auth en Supabase y desplegar los cambios en `https://tiendita-aide.vercel.app`.
 
-## Validar antes de desplegar
+## Entregado — 15 de septiembre de 2026
+
+- [x] Añadir CI en GitHub Actions para cada `push` y pull request.
+- [x] Instalar dependencias con `npm ci` y ejecutar pruebas y build de producción como verificaciones independientes en CI.
+- [x] Añadir `npm run test:ci` para ejecutar Vitest una sola vez, sin modo observación.
+- [x] Añadir `npm run ci` como comprobación local de pruebas y build.
+- [x] Documentar los comandos de verificación locales y de CI en el README.
+
+## Siguiente ciclo sugerido
+
+1. Ejecutar y documentar la validación funcional en producción: catálogo con imagen, carrito en incógnito, checkout, stock, correo, permisos no-admin y vistas móviles.
+2. Marcar el workflow de CI como comprobación obligatoria para cambios a `main` en la configuración del repositorio de GitHub.
+3. Configurar el dominio propio, limitar CORS a ese dominio y verificar el remitente de Resend.
+4. Integrar pagos con un proveedor y procesar los webhooks firmados antes de aceptar pagos reales.
+
+## Pendiente de validar en producción
 
 - [ ] Crear una categoría y un producto con imagen subida a Supabase Storage.
 - [ ] Probar el carrito desde una ventana de incógnito.
