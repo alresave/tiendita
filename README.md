@@ -87,6 +87,18 @@ To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use th
 ng test
 ```
 
+For a single non-interactive run, such as in CI, use:
+
+```bash
+npm run test:ci
+```
+
+The full local CI check (tests and production build) is:
+
+```bash
+npm run ci
+```
+
 ## Running end-to-end tests
 
 For end-to-end (e2e) testing, run:
